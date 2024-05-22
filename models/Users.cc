@@ -21,8 +21,8 @@ const std::string Users::Cols::_phone = "phone";
 const std::string Users::Cols::_gender = "gender";
 const std::string Users::Cols::_region = "region";
 const std::string Users::Cols::_created_at = "created_at";
-const std::string Users::Cols::_isVerified = "isVerified";
-const std::string Users::Cols::_isStudent = "isStudent";
+const std::string Users::Cols::_is_verified = "is_verified";
+const std::string Users::Cols::_is_student = "is_student";
 const std::string Users::Cols::_cutCount = "cutCount";
 const std::string Users::primaryKeyName = "user_id";
 const bool Users::hasPrimaryKey = true;
@@ -37,8 +37,8 @@ const std::vector<typename Users::MetaData> Users::metaData_={
 {"gender","std::string","character varying",50,0,0,0},
 {"region","std::string","character varying",50,0,0,0},
 {"created_at","::trantor::Date","timestamp without time zone",0,0,0,0},
-{"isVerified","bool","boolean",1,0,0,0},
-{"isStudent","bool","boolean",1,0,0,0},
+{"is_verified","bool","boolean",1,0,0,0},
+{"is_student","bool","boolean",1,0,0,0},
 {"cutCount","int32_t","integer",4,0,0,0}
 };
 const std::string &Users::getColumnName(size_t index) noexcept(false)
@@ -100,13 +100,13 @@ Users::Users(const Row &r, const ssize_t indexOffset) noexcept
                 createdAt_=std::make_shared<::trantor::Date>(t*1000000+decimalNum);
             }
         }
-        if(!r["isVerified"].isNull())
+        if(!r["is_verified"].isNull())
         {
-            isverified_=std::make_shared<bool>(r["isVerified"].as<bool>());
+            isVerified_=std::make_shared<bool>(r["is_verified"].as<bool>());
         }
-        if(!r["isStudent"].isNull())
+        if(!r["is_student"].isNull())
         {
-            isstudent_=std::make_shared<bool>(r["isStudent"].as<bool>());
+            isStudent_=std::make_shared<bool>(r["is_student"].as<bool>());
         }
         if(!r["cutCount"].isNull())
         {
@@ -183,12 +183,12 @@ Users::Users(const Row &r, const ssize_t indexOffset) noexcept
         index = offset + 8;
         if(!r[index].isNull())
         {
-            isverified_=std::make_shared<bool>(r[index].as<bool>());
+            isVerified_=std::make_shared<bool>(r[index].as<bool>());
         }
         index = offset + 9;
         if(!r[index].isNull())
         {
-            isstudent_=std::make_shared<bool>(r[index].as<bool>());
+            isStudent_=std::make_shared<bool>(r[index].as<bool>());
         }
         index = offset + 10;
         if(!r[index].isNull())
@@ -293,7 +293,7 @@ Users::Users(const Json::Value &pJson, const std::vector<std::string> &pMasquera
         dirtyFlag_[8] = true;
         if(!pJson[pMasqueradingVector[8]].isNull())
         {
-            isverified_=std::make_shared<bool>(pJson[pMasqueradingVector[8]].asBool());
+            isVerified_=std::make_shared<bool>(pJson[pMasqueradingVector[8]].asBool());
         }
     }
     if(!pMasqueradingVector[9].empty() && pJson.isMember(pMasqueradingVector[9]))
@@ -301,7 +301,7 @@ Users::Users(const Json::Value &pJson, const std::vector<std::string> &pMasquera
         dirtyFlag_[9] = true;
         if(!pJson[pMasqueradingVector[9]].isNull())
         {
-            isstudent_=std::make_shared<bool>(pJson[pMasqueradingVector[9]].asBool());
+            isStudent_=std::make_shared<bool>(pJson[pMasqueradingVector[9]].asBool());
         }
     }
     if(!pMasqueradingVector[10].empty() && pJson.isMember(pMasqueradingVector[10]))
@@ -398,20 +398,20 @@ Users::Users(const Json::Value &pJson) noexcept(false)
             }
         }
     }
-    if(pJson.isMember("isVerified"))
+    if(pJson.isMember("is_verified"))
     {
         dirtyFlag_[8]=true;
-        if(!pJson["isVerified"].isNull())
+        if(!pJson["is_verified"].isNull())
         {
-            isverified_=std::make_shared<bool>(pJson["isVerified"].asBool());
+            isVerified_=std::make_shared<bool>(pJson["is_verified"].asBool());
         }
     }
-    if(pJson.isMember("isStudent"))
+    if(pJson.isMember("is_student"))
     {
         dirtyFlag_[9]=true;
-        if(!pJson["isStudent"].isNull())
+        if(!pJson["is_student"].isNull())
         {
-            isstudent_=std::make_shared<bool>(pJson["isStudent"].asBool());
+            isStudent_=std::make_shared<bool>(pJson["is_student"].asBool());
         }
     }
     if(pJson.isMember("cutCount"))
@@ -518,7 +518,7 @@ void Users::updateByMasqueradedJson(const Json::Value &pJson,
         dirtyFlag_[8] = true;
         if(!pJson[pMasqueradingVector[8]].isNull())
         {
-            isverified_=std::make_shared<bool>(pJson[pMasqueradingVector[8]].asBool());
+            isVerified_=std::make_shared<bool>(pJson[pMasqueradingVector[8]].asBool());
         }
     }
     if(!pMasqueradingVector[9].empty() && pJson.isMember(pMasqueradingVector[9]))
@@ -526,7 +526,7 @@ void Users::updateByMasqueradedJson(const Json::Value &pJson,
         dirtyFlag_[9] = true;
         if(!pJson[pMasqueradingVector[9]].isNull())
         {
-            isstudent_=std::make_shared<bool>(pJson[pMasqueradingVector[9]].asBool());
+            isStudent_=std::make_shared<bool>(pJson[pMasqueradingVector[9]].asBool());
         }
     }
     if(!pMasqueradingVector[10].empty() && pJson.isMember(pMasqueradingVector[10]))
@@ -622,20 +622,20 @@ void Users::updateByJson(const Json::Value &pJson) noexcept(false)
             }
         }
     }
-    if(pJson.isMember("isVerified"))
+    if(pJson.isMember("is_verified"))
     {
         dirtyFlag_[8] = true;
-        if(!pJson["isVerified"].isNull())
+        if(!pJson["is_verified"].isNull())
         {
-            isverified_=std::make_shared<bool>(pJson["isVerified"].asBool());
+            isVerified_=std::make_shared<bool>(pJson["is_verified"].asBool());
         }
     }
-    if(pJson.isMember("isStudent"))
+    if(pJson.isMember("is_student"))
     {
         dirtyFlag_[9] = true;
-        if(!pJson["isStudent"].isNull())
+        if(!pJson["is_student"].isNull())
         {
-            isstudent_=std::make_shared<bool>(pJson["isStudent"].asBool());
+            isStudent_=std::make_shared<bool>(pJson["is_student"].asBool());
         }
     }
     if(pJson.isMember("cutCount"))
@@ -844,47 +844,47 @@ void Users::setCreatedAtToNull() noexcept
     dirtyFlag_[7] = true;
 }
 
-const bool &Users::getValueOfIsverified() const noexcept
+const bool &Users::getValueOfIsVerified() const noexcept
 {
     static const bool defaultValue = bool();
-    if(isverified_)
-        return *isverified_;
+    if(isVerified_)
+        return *isVerified_;
     return defaultValue;
 }
-const std::shared_ptr<bool> &Users::getIsverified() const noexcept
+const std::shared_ptr<bool> &Users::getIsVerified() const noexcept
 {
-    return isverified_;
+    return isVerified_;
 }
-void Users::setIsverified(const bool &pIsverified) noexcept
+void Users::setIsVerified(const bool &pIsVerified) noexcept
 {
-    isverified_ = std::make_shared<bool>(pIsverified);
+    isVerified_ = std::make_shared<bool>(pIsVerified);
     dirtyFlag_[8] = true;
 }
-void Users::setIsverifiedToNull() noexcept
+void Users::setIsVerifiedToNull() noexcept
 {
-    isverified_.reset();
+    isVerified_.reset();
     dirtyFlag_[8] = true;
 }
 
-const bool &Users::getValueOfIsstudent() const noexcept
+const bool &Users::getValueOfIsStudent() const noexcept
 {
     static const bool defaultValue = bool();
-    if(isstudent_)
-        return *isstudent_;
+    if(isStudent_)
+        return *isStudent_;
     return defaultValue;
 }
-const std::shared_ptr<bool> &Users::getIsstudent() const noexcept
+const std::shared_ptr<bool> &Users::getIsStudent() const noexcept
 {
-    return isstudent_;
+    return isStudent_;
 }
-void Users::setIsstudent(const bool &pIsstudent) noexcept
+void Users::setIsStudent(const bool &pIsStudent) noexcept
 {
-    isstudent_ = std::make_shared<bool>(pIsstudent);
+    isStudent_ = std::make_shared<bool>(pIsStudent);
     dirtyFlag_[9] = true;
 }
-void Users::setIsstudentToNull() noexcept
+void Users::setIsStudentToNull() noexcept
 {
-    isstudent_.reset();
+    isStudent_.reset();
     dirtyFlag_[9] = true;
 }
 
@@ -924,8 +924,8 @@ const std::vector<std::string> &Users::insertColumns() noexcept
         "gender",
         "region",
         "created_at",
-        "isVerified",
-        "isStudent",
+        "is_verified",
+        "is_student",
         "cutCount"
     };
     return inCols;
@@ -1012,9 +1012,9 @@ void Users::outputArgs(drogon::orm::internal::SqlBinder &binder) const
     }
     if(dirtyFlag_[8])
     {
-        if(getIsverified())
+        if(getIsVerified())
         {
-            binder << getValueOfIsverified();
+            binder << getValueOfIsVerified();
         }
         else
         {
@@ -1023,9 +1023,9 @@ void Users::outputArgs(drogon::orm::internal::SqlBinder &binder) const
     }
     if(dirtyFlag_[9])
     {
-        if(getIsstudent())
+        if(getIsStudent())
         {
-            binder << getValueOfIsstudent();
+            binder << getValueOfIsStudent();
         }
         else
         {
@@ -1172,9 +1172,9 @@ void Users::updateArgs(drogon::orm::internal::SqlBinder &binder) const
     }
     if(dirtyFlag_[8])
     {
-        if(getIsverified())
+        if(getIsVerified())
         {
-            binder << getValueOfIsverified();
+            binder << getValueOfIsVerified();
         }
         else
         {
@@ -1183,9 +1183,9 @@ void Users::updateArgs(drogon::orm::internal::SqlBinder &binder) const
     }
     if(dirtyFlag_[9])
     {
-        if(getIsstudent())
+        if(getIsStudent())
         {
-            binder << getValueOfIsstudent();
+            binder << getValueOfIsStudent();
         }
         else
         {
@@ -1271,21 +1271,21 @@ Json::Value Users::toJson() const
     {
         ret["created_at"]=Json::Value();
     }
-    if(getIsverified())
+    if(getIsVerified())
     {
-        ret["isVerified"]=getValueOfIsverified();
+        ret["is_verified"]=getValueOfIsVerified();
     }
     else
     {
-        ret["isVerified"]=Json::Value();
+        ret["is_verified"]=Json::Value();
     }
-    if(getIsstudent())
+    if(getIsStudent())
     {
-        ret["isStudent"]=getValueOfIsstudent();
+        ret["is_student"]=getValueOfIsStudent();
     }
     else
     {
-        ret["isStudent"]=Json::Value();
+        ret["is_student"]=Json::Value();
     }
     if(getCutcount())
     {
@@ -1394,9 +1394,9 @@ Json::Value Users::toMasqueradedJson(
         }
         if(!pMasqueradingVector[8].empty())
         {
-            if(getIsverified())
+            if(getIsVerified())
             {
-                ret[pMasqueradingVector[8]]=getValueOfIsverified();
+                ret[pMasqueradingVector[8]]=getValueOfIsVerified();
             }
             else
             {
@@ -1405,9 +1405,9 @@ Json::Value Users::toMasqueradedJson(
         }
         if(!pMasqueradingVector[9].empty())
         {
-            if(getIsstudent())
+            if(getIsStudent())
             {
-                ret[pMasqueradingVector[9]]=getValueOfIsstudent();
+                ret[pMasqueradingVector[9]]=getValueOfIsStudent();
             }
             else
             {
@@ -1492,21 +1492,21 @@ Json::Value Users::toMasqueradedJson(
     {
         ret["created_at"]=Json::Value();
     }
-    if(getIsverified())
+    if(getIsVerified())
     {
-        ret["isVerified"]=getValueOfIsverified();
+        ret["is_verified"]=getValueOfIsVerified();
     }
     else
     {
-        ret["isVerified"]=Json::Value();
+        ret["is_verified"]=Json::Value();
     }
-    if(getIsstudent())
+    if(getIsStudent())
     {
-        ret["isStudent"]=getValueOfIsstudent();
+        ret["is_student"]=getValueOfIsStudent();
     }
     else
     {
-        ret["isStudent"]=Json::Value();
+        ret["is_student"]=Json::Value();
     }
     if(getCutcount())
     {
@@ -1571,14 +1571,14 @@ bool Users::validateJsonForCreation(const Json::Value &pJson, std::string &err)
         if(!validJsonOfField(7, "created_at", pJson["created_at"], err, true))
             return false;
     }
-    if(pJson.isMember("isVerified"))
+    if(pJson.isMember("is_verified"))
     {
-        if(!validJsonOfField(8, "isVerified", pJson["isVerified"], err, true))
+        if(!validJsonOfField(8, "is_verified", pJson["is_verified"], err, true))
             return false;
     }
-    if(pJson.isMember("isStudent"))
+    if(pJson.isMember("is_student"))
     {
-        if(!validJsonOfField(9, "isStudent", pJson["isStudent"], err, true))
+        if(!validJsonOfField(9, "is_student", pJson["is_student"], err, true))
             return false;
     }
     if(pJson.isMember("cutCount"))
@@ -1751,14 +1751,14 @@ bool Users::validateJsonForUpdate(const Json::Value &pJson, std::string &err)
         if(!validJsonOfField(7, "created_at", pJson["created_at"], err, false))
             return false;
     }
-    if(pJson.isMember("isVerified"))
+    if(pJson.isMember("is_verified"))
     {
-        if(!validJsonOfField(8, "isVerified", pJson["isVerified"], err, false))
+        if(!validJsonOfField(8, "is_verified", pJson["is_verified"], err, false))
             return false;
     }
-    if(pJson.isMember("isStudent"))
+    if(pJson.isMember("is_student"))
     {
-        if(!validJsonOfField(9, "isStudent", pJson["isStudent"], err, false))
+        if(!validJsonOfField(9, "is_student", pJson["is_student"], err, false))
             return false;
     }
     if(pJson.isMember("cutCount"))

@@ -52,8 +52,8 @@ class Users
         static const std::string _gender;
         static const std::string _region;
         static const std::string _created_at;
-        static const std::string _isVerified;
-        static const std::string _isStudent;
+        static const std::string _is_verified;
+        static const std::string _is_student;
         static const std::string _cutCount;
     };
 
@@ -181,23 +181,23 @@ class Users
     void setCreatedAt(const ::trantor::Date &pCreatedAt) noexcept;
     void setCreatedAtToNull() noexcept;
 
-    /**  For column isVerified  */
-    ///Get the value of the column isVerified, returns the default value if the column is null
-    const bool &getValueOfIsverified() const noexcept;
+    /**  For column is_verified  */
+    ///Get the value of the column is_verified, returns the default value if the column is null
+    const bool &getValueOfIsVerified() const noexcept;
     ///Return a shared_ptr object pointing to the column const value, or an empty shared_ptr object if the column is null
-    const std::shared_ptr<bool> &getIsverified() const noexcept;
-    ///Set the value of the column isVerified
-    void setIsverified(const bool &pIsverified) noexcept;
-    void setIsverifiedToNull() noexcept;
+    const std::shared_ptr<bool> &getIsVerified() const noexcept;
+    ///Set the value of the column is_verified
+    void setIsVerified(const bool &pIsVerified) noexcept;
+    void setIsVerifiedToNull() noexcept;
 
-    /**  For column isStudent  */
-    ///Get the value of the column isStudent, returns the default value if the column is null
-    const bool &getValueOfIsstudent() const noexcept;
+    /**  For column is_student  */
+    ///Get the value of the column is_student, returns the default value if the column is null
+    const bool &getValueOfIsStudent() const noexcept;
     ///Return a shared_ptr object pointing to the column const value, or an empty shared_ptr object if the column is null
-    const std::shared_ptr<bool> &getIsstudent() const noexcept;
-    ///Set the value of the column isStudent
-    void setIsstudent(const bool &pIsstudent) noexcept;
-    void setIsstudentToNull() noexcept;
+    const std::shared_ptr<bool> &getIsStudent() const noexcept;
+    ///Set the value of the column is_student
+    void setIsStudent(const bool &pIsStudent) noexcept;
+    void setIsStudentToNull() noexcept;
 
     /**  For column cutCount  */
     ///Get the value of the column cutCount, returns the default value if the column is null
@@ -238,8 +238,8 @@ class Users
     std::shared_ptr<std::string> gender_;
     std::shared_ptr<std::string> region_;
     std::shared_ptr<::trantor::Date> createdAt_;
-    std::shared_ptr<bool> isverified_;
-    std::shared_ptr<bool> isstudent_;
+    std::shared_ptr<bool> isVerified_;
+    std::shared_ptr<bool> isStudent_;
     std::shared_ptr<int32_t> cutcount_;
     struct MetaData
     {
@@ -308,13 +308,13 @@ class Users
         {
             needSelection=true;
         }
-        sql += "isVerified,";
+        sql += "is_verified,";
         ++parametersCount;
         if(!dirtyFlag_[8])
         {
             needSelection=true;
         }
-        sql += "isStudent,";
+        sql += "is_student,";
         ++parametersCount;
         if(!dirtyFlag_[9])
         {
