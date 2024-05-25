@@ -29,7 +29,7 @@ const std::vector<typename Orders::MetaData> Orders::metaData_={
 {"ticket_id","int32_t","integer",4,0,0,1},
 {"status","int32_t","integer",4,0,0,1},
 {"created_at","::trantor::Date","timestamp without time zone",0,0,0,1},
-{"user_info","std::string","jsonb",0,0,0,1}
+{"user_info","std::string","json",0,0,0,1}
 };
 const std::string &Orders::getColumnName(size_t index) noexcept(false)
 {

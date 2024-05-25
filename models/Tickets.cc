@@ -19,11 +19,12 @@ const std::string Tickets::Cols::_from = "from";
 const std::string Tickets::Cols::_to = "to";
 const std::string Tickets::Cols::_start_date = "start_date";
 const std::string Tickets::Cols::_end_date = "end_date";
-const std::string Tickets::Cols::_time = "time";
 const std::string Tickets::Cols::_price = "price";
 const std::string Tickets::Cols::_train_type = "train_type";
-const std::string Tickets::Cols::_seat_type = "seat_type";
-const std::string Tickets::Cols::_status = "status";
+const std::string Tickets::Cols::_type_1 = "type_1";
+const std::string Tickets::Cols::_type_2 = "type_2";
+const std::string Tickets::Cols::_type_3 = "type_3";
+const std::string Tickets::Cols::_type_4 = "type_4";
 const std::string Tickets::primaryKeyName = "id";
 const bool Tickets::hasPrimaryKey = true;
 const std::string Tickets::tableName = "tickets";
@@ -33,13 +34,14 @@ const std::vector<typename Tickets::MetaData> Tickets::metaData_={
 {"title","std::string","character varying",255,0,0,1},
 {"from","std::string","character varying",255,0,0,1},
 {"to","std::string","character varying",255,0,0,1},
-{"start_date","::trantor::Date","date",0,0,0,1},
-{"end_date","::trantor::Date","date",0,0,0,1},
-{"time","std::string","time without time zone",0,0,0,1},
+{"start_date","::trantor::Date","timestamp without time zone",0,0,0,1},
+{"end_date","::trantor::Date","timestamp without time zone",0,0,0,1},
 {"price","std::string","numeric",0,0,0,1},
 {"train_type","int32_t","integer",4,0,0,1},
-{"seat_type","int32_t","integer",4,0,0,1},
-{"status","int32_t","integer",4,0,0,1}
+{"type_1","int32_t","integer",4,0,0,1},
+{"type_2","int32_t","integer",4,0,0,0},
+{"type_3","int32_t","integer",4,0,0,0},
+{"type_4","int32_t","integer",4,0,0,0}
 };
 const std::string &Tickets::getColumnName(size_t index) noexcept(false)
 {
@@ -68,25 +70,47 @@ Tickets::Tickets(const Row &r, const ssize_t indexOffset) noexcept
         }
         if(!r["start_date"].isNull())
         {
-            auto daysStr = r["start_date"].as<std::string>();
+            auto timeStr = r["start_date"].as<std::string>();
             struct tm stm;
             memset(&stm,0,sizeof(stm));
-            strptime(daysStr.c_str(),"%Y-%m-%d",&stm);
+            auto p = strptime(timeStr.c_str(),"%Y-%m-%d %H:%M:%S",&stm);
             time_t t = mktime(&stm);
-            startDate_=std::make_shared<::trantor::Date>(t*1000000);
+            size_t decimalNum = 0;
+            if(p)
+            {
+                if(*p=='.')
+                {
+                    std::string decimals(p+1,&timeStr[timeStr.length()]);
+                    while(decimals.length()<6)
+                    {
+                        decimals += "0";
+                    }
+                    decimalNum = (size_t)atol(decimals.c_str());
+                }
+                startDate_=std::make_shared<::trantor::Date>(t*1000000+decimalNum);
+            }
         }
         if(!r["end_date"].isNull())
         {
-            auto daysStr = r["end_date"].as<std::string>();
+            auto timeStr = r["end_date"].as<std::string>();
             struct tm stm;
             memset(&stm,0,sizeof(stm));
-            strptime(daysStr.c_str(),"%Y-%m-%d",&stm);
+            auto p = strptime(timeStr.c_str(),"%Y-%m-%d %H:%M:%S",&stm);
             time_t t = mktime(&stm);
-            endDate_=std::make_shared<::trantor::Date>(t*1000000);
-        }
-        if(!r["time"].isNull())
-        {
-            time_=std::make_shared<std::string>(r["time"].as<std::string>());
+            size_t decimalNum = 0;
+            if(p)
+            {
+                if(*p=='.')
+                {
+                    std::string decimals(p+1,&timeStr[timeStr.length()]);
+                    while(decimals.length()<6)
+                    {
+                        decimals += "0";
+                    }
+                    decimalNum = (size_t)atol(decimals.c_str());
+                }
+                endDate_=std::make_shared<::trantor::Date>(t*1000000+decimalNum);
+            }
         }
         if(!r["price"].isNull())
         {
@@ -96,19 +120,27 @@ Tickets::Tickets(const Row &r, const ssize_t indexOffset) noexcept
         {
             trainType_=std::make_shared<int32_t>(r["train_type"].as<int32_t>());
         }
-        if(!r["seat_type"].isNull())
+        if(!r["type_1"].isNull())
         {
-            seatType_=std::make_shared<int32_t>(r["seat_type"].as<int32_t>());
+            type1_=std::make_shared<int32_t>(r["type_1"].as<int32_t>());
         }
-        if(!r["status"].isNull())
+        if(!r["type_2"].isNull())
         {
-            status_=std::make_shared<int32_t>(r["status"].as<int32_t>());
+            type2_=std::make_shared<int32_t>(r["type_2"].as<int32_t>());
+        }
+        if(!r["type_3"].isNull())
+        {
+            type3_=std::make_shared<int32_t>(r["type_3"].as<int32_t>());
+        }
+        if(!r["type_4"].isNull())
+        {
+            type4_=std::make_shared<int32_t>(r["type_4"].as<int32_t>());
         }
     }
     else
     {
         size_t offset = (size_t)indexOffset;
-        if(offset + 11 > r.size())
+        if(offset + 12 > r.size())
         {
             LOG_FATAL << "Invalid SQL result for this model";
             return;
@@ -137,47 +169,78 @@ Tickets::Tickets(const Row &r, const ssize_t indexOffset) noexcept
         index = offset + 4;
         if(!r[index].isNull())
         {
-            auto daysStr = r[index].as<std::string>();
+            auto timeStr = r[index].as<std::string>();
             struct tm stm;
             memset(&stm,0,sizeof(stm));
-            strptime(daysStr.c_str(),"%Y-%m-%d",&stm);
+            auto p = strptime(timeStr.c_str(),"%Y-%m-%d %H:%M:%S",&stm);
             time_t t = mktime(&stm);
-            startDate_=std::make_shared<::trantor::Date>(t*1000000);
+            size_t decimalNum = 0;
+            if(p)
+            {
+                if(*p=='.')
+                {
+                    std::string decimals(p+1,&timeStr[timeStr.length()]);
+                    while(decimals.length()<6)
+                    {
+                        decimals += "0";
+                    }
+                    decimalNum = (size_t)atol(decimals.c_str());
+                }
+                startDate_=std::make_shared<::trantor::Date>(t*1000000+decimalNum);
+            }
         }
         index = offset + 5;
         if(!r[index].isNull())
         {
-            auto daysStr = r[index].as<std::string>();
+            auto timeStr = r[index].as<std::string>();
             struct tm stm;
             memset(&stm,0,sizeof(stm));
-            strptime(daysStr.c_str(),"%Y-%m-%d",&stm);
+            auto p = strptime(timeStr.c_str(),"%Y-%m-%d %H:%M:%S",&stm);
             time_t t = mktime(&stm);
-            endDate_=std::make_shared<::trantor::Date>(t*1000000);
+            size_t decimalNum = 0;
+            if(p)
+            {
+                if(*p=='.')
+                {
+                    std::string decimals(p+1,&timeStr[timeStr.length()]);
+                    while(decimals.length()<6)
+                    {
+                        decimals += "0";
+                    }
+                    decimalNum = (size_t)atol(decimals.c_str());
+                }
+                endDate_=std::make_shared<::trantor::Date>(t*1000000+decimalNum);
+            }
         }
         index = offset + 6;
         if(!r[index].isNull())
         {
-            time_=std::make_shared<std::string>(r[index].as<std::string>());
+            price_=std::make_shared<std::string>(r[index].as<std::string>());
         }
         index = offset + 7;
         if(!r[index].isNull())
         {
-            price_=std::make_shared<std::string>(r[index].as<std::string>());
+            trainType_=std::make_shared<int32_t>(r[index].as<int32_t>());
         }
         index = offset + 8;
         if(!r[index].isNull())
         {
-            trainType_=std::make_shared<int32_t>(r[index].as<int32_t>());
+            type1_=std::make_shared<int32_t>(r[index].as<int32_t>());
         }
         index = offset + 9;
         if(!r[index].isNull())
         {
-            seatType_=std::make_shared<int32_t>(r[index].as<int32_t>());
+            type2_=std::make_shared<int32_t>(r[index].as<int32_t>());
         }
         index = offset + 10;
         if(!r[index].isNull())
         {
-            status_=std::make_shared<int32_t>(r[index].as<int32_t>());
+            type3_=std::make_shared<int32_t>(r[index].as<int32_t>());
+        }
+        index = offset + 11;
+        if(!r[index].isNull())
+        {
+            type4_=std::make_shared<int32_t>(r[index].as<int32_t>());
         }
     }
 
@@ -185,7 +248,7 @@ Tickets::Tickets(const Row &r, const ssize_t indexOffset) noexcept
 
 Tickets::Tickets(const Json::Value &pJson, const std::vector<std::string> &pMasqueradingVector) noexcept(false)
 {
-    if(pMasqueradingVector.size() != 11)
+    if(pMasqueradingVector.size() != 12)
     {
         LOG_ERROR << "Bad masquerading vector";
         return;
@@ -227,12 +290,25 @@ Tickets::Tickets(const Json::Value &pJson, const std::vector<std::string> &pMasq
         dirtyFlag_[4] = true;
         if(!pJson[pMasqueradingVector[4]].isNull())
         {
-            auto daysStr = pJson[pMasqueradingVector[4]].asString();
+            auto timeStr = pJson[pMasqueradingVector[4]].asString();
             struct tm stm;
             memset(&stm,0,sizeof(stm));
-            strptime(daysStr.c_str(),"%Y-%m-%d",&stm);
+            auto p = strptime(timeStr.c_str(),"%Y-%m-%d %H:%M:%S",&stm);
             time_t t = mktime(&stm);
-            startDate_=std::make_shared<::trantor::Date>(t*1000000);
+            size_t decimalNum = 0;
+            if(p)
+            {
+                if(*p=='.')
+                {
+                    std::string decimals(p+1,&timeStr[timeStr.length()]);
+                    while(decimals.length()<6)
+                    {
+                        decimals += "0";
+                    }
+                    decimalNum = (size_t)atol(decimals.c_str());
+                }
+                startDate_=std::make_shared<::trantor::Date>(t*1000000+decimalNum);
+            }
         }
     }
     if(!pMasqueradingVector[5].empty() && pJson.isMember(pMasqueradingVector[5]))
@@ -240,12 +316,25 @@ Tickets::Tickets(const Json::Value &pJson, const std::vector<std::string> &pMasq
         dirtyFlag_[5] = true;
         if(!pJson[pMasqueradingVector[5]].isNull())
         {
-            auto daysStr = pJson[pMasqueradingVector[5]].asString();
+            auto timeStr = pJson[pMasqueradingVector[5]].asString();
             struct tm stm;
             memset(&stm,0,sizeof(stm));
-            strptime(daysStr.c_str(),"%Y-%m-%d",&stm);
+            auto p = strptime(timeStr.c_str(),"%Y-%m-%d %H:%M:%S",&stm);
             time_t t = mktime(&stm);
-            endDate_=std::make_shared<::trantor::Date>(t*1000000);
+            size_t decimalNum = 0;
+            if(p)
+            {
+                if(*p=='.')
+                {
+                    std::string decimals(p+1,&timeStr[timeStr.length()]);
+                    while(decimals.length()<6)
+                    {
+                        decimals += "0";
+                    }
+                    decimalNum = (size_t)atol(decimals.c_str());
+                }
+                endDate_=std::make_shared<::trantor::Date>(t*1000000+decimalNum);
+            }
         }
     }
     if(!pMasqueradingVector[6].empty() && pJson.isMember(pMasqueradingVector[6]))
@@ -253,7 +342,7 @@ Tickets::Tickets(const Json::Value &pJson, const std::vector<std::string> &pMasq
         dirtyFlag_[6] = true;
         if(!pJson[pMasqueradingVector[6]].isNull())
         {
-            time_=std::make_shared<std::string>(pJson[pMasqueradingVector[6]].asString());
+            price_=std::make_shared<std::string>(pJson[pMasqueradingVector[6]].asString());
         }
     }
     if(!pMasqueradingVector[7].empty() && pJson.isMember(pMasqueradingVector[7]))
@@ -261,7 +350,7 @@ Tickets::Tickets(const Json::Value &pJson, const std::vector<std::string> &pMasq
         dirtyFlag_[7] = true;
         if(!pJson[pMasqueradingVector[7]].isNull())
         {
-            price_=std::make_shared<std::string>(pJson[pMasqueradingVector[7]].asString());
+            trainType_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[7]].asInt64());
         }
     }
     if(!pMasqueradingVector[8].empty() && pJson.isMember(pMasqueradingVector[8]))
@@ -269,7 +358,7 @@ Tickets::Tickets(const Json::Value &pJson, const std::vector<std::string> &pMasq
         dirtyFlag_[8] = true;
         if(!pJson[pMasqueradingVector[8]].isNull())
         {
-            trainType_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[8]].asInt64());
+            type1_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[8]].asInt64());
         }
     }
     if(!pMasqueradingVector[9].empty() && pJson.isMember(pMasqueradingVector[9]))
@@ -277,7 +366,7 @@ Tickets::Tickets(const Json::Value &pJson, const std::vector<std::string> &pMasq
         dirtyFlag_[9] = true;
         if(!pJson[pMasqueradingVector[9]].isNull())
         {
-            seatType_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[9]].asInt64());
+            type2_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[9]].asInt64());
         }
     }
     if(!pMasqueradingVector[10].empty() && pJson.isMember(pMasqueradingVector[10]))
@@ -285,7 +374,15 @@ Tickets::Tickets(const Json::Value &pJson, const std::vector<std::string> &pMasq
         dirtyFlag_[10] = true;
         if(!pJson[pMasqueradingVector[10]].isNull())
         {
-            status_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[10]].asInt64());
+            type3_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[10]].asInt64());
+        }
+    }
+    if(!pMasqueradingVector[11].empty() && pJson.isMember(pMasqueradingVector[11]))
+    {
+        dirtyFlag_[11] = true;
+        if(!pJson[pMasqueradingVector[11]].isNull())
+        {
+            type4_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[11]].asInt64());
         }
     }
 }
@@ -329,12 +426,25 @@ Tickets::Tickets(const Json::Value &pJson) noexcept(false)
         dirtyFlag_[4]=true;
         if(!pJson["start_date"].isNull())
         {
-            auto daysStr = pJson["start_date"].asString();
+            auto timeStr = pJson["start_date"].asString();
             struct tm stm;
             memset(&stm,0,sizeof(stm));
-            strptime(daysStr.c_str(),"%Y-%m-%d",&stm);
+            auto p = strptime(timeStr.c_str(),"%Y-%m-%d %H:%M:%S",&stm);
             time_t t = mktime(&stm);
-            startDate_=std::make_shared<::trantor::Date>(t*1000000);
+            size_t decimalNum = 0;
+            if(p)
+            {
+                if(*p=='.')
+                {
+                    std::string decimals(p+1,&timeStr[timeStr.length()]);
+                    while(decimals.length()<6)
+                    {
+                        decimals += "0";
+                    }
+                    decimalNum = (size_t)atol(decimals.c_str());
+                }
+                startDate_=std::make_shared<::trantor::Date>(t*1000000+decimalNum);
+            }
         }
     }
     if(pJson.isMember("end_date"))
@@ -342,25 +452,30 @@ Tickets::Tickets(const Json::Value &pJson) noexcept(false)
         dirtyFlag_[5]=true;
         if(!pJson["end_date"].isNull())
         {
-            auto daysStr = pJson["end_date"].asString();
+            auto timeStr = pJson["end_date"].asString();
             struct tm stm;
             memset(&stm,0,sizeof(stm));
-            strptime(daysStr.c_str(),"%Y-%m-%d",&stm);
+            auto p = strptime(timeStr.c_str(),"%Y-%m-%d %H:%M:%S",&stm);
             time_t t = mktime(&stm);
-            endDate_=std::make_shared<::trantor::Date>(t*1000000);
-        }
-    }
-    if(pJson.isMember("time"))
-    {
-        dirtyFlag_[6]=true;
-        if(!pJson["time"].isNull())
-        {
-            time_=std::make_shared<std::string>(pJson["time"].asString());
+            size_t decimalNum = 0;
+            if(p)
+            {
+                if(*p=='.')
+                {
+                    std::string decimals(p+1,&timeStr[timeStr.length()]);
+                    while(decimals.length()<6)
+                    {
+                        decimals += "0";
+                    }
+                    decimalNum = (size_t)atol(decimals.c_str());
+                }
+                endDate_=std::make_shared<::trantor::Date>(t*1000000+decimalNum);
+            }
         }
     }
     if(pJson.isMember("price"))
     {
-        dirtyFlag_[7]=true;
+        dirtyFlag_[6]=true;
         if(!pJson["price"].isNull())
         {
             price_=std::make_shared<std::string>(pJson["price"].asString());
@@ -368,26 +483,42 @@ Tickets::Tickets(const Json::Value &pJson) noexcept(false)
     }
     if(pJson.isMember("train_type"))
     {
-        dirtyFlag_[8]=true;
+        dirtyFlag_[7]=true;
         if(!pJson["train_type"].isNull())
         {
             trainType_=std::make_shared<int32_t>((int32_t)pJson["train_type"].asInt64());
         }
     }
-    if(pJson.isMember("seat_type"))
+    if(pJson.isMember("type_1"))
     {
-        dirtyFlag_[9]=true;
-        if(!pJson["seat_type"].isNull())
+        dirtyFlag_[8]=true;
+        if(!pJson["type_1"].isNull())
         {
-            seatType_=std::make_shared<int32_t>((int32_t)pJson["seat_type"].asInt64());
+            type1_=std::make_shared<int32_t>((int32_t)pJson["type_1"].asInt64());
         }
     }
-    if(pJson.isMember("status"))
+    if(pJson.isMember("type_2"))
+    {
+        dirtyFlag_[9]=true;
+        if(!pJson["type_2"].isNull())
+        {
+            type2_=std::make_shared<int32_t>((int32_t)pJson["type_2"].asInt64());
+        }
+    }
+    if(pJson.isMember("type_3"))
     {
         dirtyFlag_[10]=true;
-        if(!pJson["status"].isNull())
+        if(!pJson["type_3"].isNull())
         {
-            status_=std::make_shared<int32_t>((int32_t)pJson["status"].asInt64());
+            type3_=std::make_shared<int32_t>((int32_t)pJson["type_3"].asInt64());
+        }
+    }
+    if(pJson.isMember("type_4"))
+    {
+        dirtyFlag_[11]=true;
+        if(!pJson["type_4"].isNull())
+        {
+            type4_=std::make_shared<int32_t>((int32_t)pJson["type_4"].asInt64());
         }
     }
 }
@@ -395,7 +526,7 @@ Tickets::Tickets(const Json::Value &pJson) noexcept(false)
 void Tickets::updateByMasqueradedJson(const Json::Value &pJson,
                                             const std::vector<std::string> &pMasqueradingVector) noexcept(false)
 {
-    if(pMasqueradingVector.size() != 11)
+    if(pMasqueradingVector.size() != 12)
     {
         LOG_ERROR << "Bad masquerading vector";
         return;
@@ -436,12 +567,25 @@ void Tickets::updateByMasqueradedJson(const Json::Value &pJson,
         dirtyFlag_[4] = true;
         if(!pJson[pMasqueradingVector[4]].isNull())
         {
-            auto daysStr = pJson[pMasqueradingVector[4]].asString();
+            auto timeStr = pJson[pMasqueradingVector[4]].asString();
             struct tm stm;
             memset(&stm,0,sizeof(stm));
-            strptime(daysStr.c_str(),"%Y-%m-%d",&stm);
+            auto p = strptime(timeStr.c_str(),"%Y-%m-%d %H:%M:%S",&stm);
             time_t t = mktime(&stm);
-            startDate_=std::make_shared<::trantor::Date>(t*1000000);
+            size_t decimalNum = 0;
+            if(p)
+            {
+                if(*p=='.')
+                {
+                    std::string decimals(p+1,&timeStr[timeStr.length()]);
+                    while(decimals.length()<6)
+                    {
+                        decimals += "0";
+                    }
+                    decimalNum = (size_t)atol(decimals.c_str());
+                }
+                startDate_=std::make_shared<::trantor::Date>(t*1000000+decimalNum);
+            }
         }
     }
     if(!pMasqueradingVector[5].empty() && pJson.isMember(pMasqueradingVector[5]))
@@ -449,12 +593,25 @@ void Tickets::updateByMasqueradedJson(const Json::Value &pJson,
         dirtyFlag_[5] = true;
         if(!pJson[pMasqueradingVector[5]].isNull())
         {
-            auto daysStr = pJson[pMasqueradingVector[5]].asString();
+            auto timeStr = pJson[pMasqueradingVector[5]].asString();
             struct tm stm;
             memset(&stm,0,sizeof(stm));
-            strptime(daysStr.c_str(),"%Y-%m-%d",&stm);
+            auto p = strptime(timeStr.c_str(),"%Y-%m-%d %H:%M:%S",&stm);
             time_t t = mktime(&stm);
-            endDate_=std::make_shared<::trantor::Date>(t*1000000);
+            size_t decimalNum = 0;
+            if(p)
+            {
+                if(*p=='.')
+                {
+                    std::string decimals(p+1,&timeStr[timeStr.length()]);
+                    while(decimals.length()<6)
+                    {
+                        decimals += "0";
+                    }
+                    decimalNum = (size_t)atol(decimals.c_str());
+                }
+                endDate_=std::make_shared<::trantor::Date>(t*1000000+decimalNum);
+            }
         }
     }
     if(!pMasqueradingVector[6].empty() && pJson.isMember(pMasqueradingVector[6]))
@@ -462,7 +619,7 @@ void Tickets::updateByMasqueradedJson(const Json::Value &pJson,
         dirtyFlag_[6] = true;
         if(!pJson[pMasqueradingVector[6]].isNull())
         {
-            time_=std::make_shared<std::string>(pJson[pMasqueradingVector[6]].asString());
+            price_=std::make_shared<std::string>(pJson[pMasqueradingVector[6]].asString());
         }
     }
     if(!pMasqueradingVector[7].empty() && pJson.isMember(pMasqueradingVector[7]))
@@ -470,7 +627,7 @@ void Tickets::updateByMasqueradedJson(const Json::Value &pJson,
         dirtyFlag_[7] = true;
         if(!pJson[pMasqueradingVector[7]].isNull())
         {
-            price_=std::make_shared<std::string>(pJson[pMasqueradingVector[7]].asString());
+            trainType_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[7]].asInt64());
         }
     }
     if(!pMasqueradingVector[8].empty() && pJson.isMember(pMasqueradingVector[8]))
@@ -478,7 +635,7 @@ void Tickets::updateByMasqueradedJson(const Json::Value &pJson,
         dirtyFlag_[8] = true;
         if(!pJson[pMasqueradingVector[8]].isNull())
         {
-            trainType_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[8]].asInt64());
+            type1_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[8]].asInt64());
         }
     }
     if(!pMasqueradingVector[9].empty() && pJson.isMember(pMasqueradingVector[9]))
@@ -486,7 +643,7 @@ void Tickets::updateByMasqueradedJson(const Json::Value &pJson,
         dirtyFlag_[9] = true;
         if(!pJson[pMasqueradingVector[9]].isNull())
         {
-            seatType_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[9]].asInt64());
+            type2_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[9]].asInt64());
         }
     }
     if(!pMasqueradingVector[10].empty() && pJson.isMember(pMasqueradingVector[10]))
@@ -494,7 +651,15 @@ void Tickets::updateByMasqueradedJson(const Json::Value &pJson,
         dirtyFlag_[10] = true;
         if(!pJson[pMasqueradingVector[10]].isNull())
         {
-            status_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[10]].asInt64());
+            type3_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[10]].asInt64());
+        }
+    }
+    if(!pMasqueradingVector[11].empty() && pJson.isMember(pMasqueradingVector[11]))
+    {
+        dirtyFlag_[11] = true;
+        if(!pJson[pMasqueradingVector[11]].isNull())
+        {
+            type4_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[11]].asInt64());
         }
     }
 }
@@ -537,12 +702,25 @@ void Tickets::updateByJson(const Json::Value &pJson) noexcept(false)
         dirtyFlag_[4] = true;
         if(!pJson["start_date"].isNull())
         {
-            auto daysStr = pJson["start_date"].asString();
+            auto timeStr = pJson["start_date"].asString();
             struct tm stm;
             memset(&stm,0,sizeof(stm));
-            strptime(daysStr.c_str(),"%Y-%m-%d",&stm);
+            auto p = strptime(timeStr.c_str(),"%Y-%m-%d %H:%M:%S",&stm);
             time_t t = mktime(&stm);
-            startDate_=std::make_shared<::trantor::Date>(t*1000000);
+            size_t decimalNum = 0;
+            if(p)
+            {
+                if(*p=='.')
+                {
+                    std::string decimals(p+1,&timeStr[timeStr.length()]);
+                    while(decimals.length()<6)
+                    {
+                        decimals += "0";
+                    }
+                    decimalNum = (size_t)atol(decimals.c_str());
+                }
+                startDate_=std::make_shared<::trantor::Date>(t*1000000+decimalNum);
+            }
         }
     }
     if(pJson.isMember("end_date"))
@@ -550,25 +728,30 @@ void Tickets::updateByJson(const Json::Value &pJson) noexcept(false)
         dirtyFlag_[5] = true;
         if(!pJson["end_date"].isNull())
         {
-            auto daysStr = pJson["end_date"].asString();
+            auto timeStr = pJson["end_date"].asString();
             struct tm stm;
             memset(&stm,0,sizeof(stm));
-            strptime(daysStr.c_str(),"%Y-%m-%d",&stm);
+            auto p = strptime(timeStr.c_str(),"%Y-%m-%d %H:%M:%S",&stm);
             time_t t = mktime(&stm);
-            endDate_=std::make_shared<::trantor::Date>(t*1000000);
-        }
-    }
-    if(pJson.isMember("time"))
-    {
-        dirtyFlag_[6] = true;
-        if(!pJson["time"].isNull())
-        {
-            time_=std::make_shared<std::string>(pJson["time"].asString());
+            size_t decimalNum = 0;
+            if(p)
+            {
+                if(*p=='.')
+                {
+                    std::string decimals(p+1,&timeStr[timeStr.length()]);
+                    while(decimals.length()<6)
+                    {
+                        decimals += "0";
+                    }
+                    decimalNum = (size_t)atol(decimals.c_str());
+                }
+                endDate_=std::make_shared<::trantor::Date>(t*1000000+decimalNum);
+            }
         }
     }
     if(pJson.isMember("price"))
     {
-        dirtyFlag_[7] = true;
+        dirtyFlag_[6] = true;
         if(!pJson["price"].isNull())
         {
             price_=std::make_shared<std::string>(pJson["price"].asString());
@@ -576,26 +759,42 @@ void Tickets::updateByJson(const Json::Value &pJson) noexcept(false)
     }
     if(pJson.isMember("train_type"))
     {
-        dirtyFlag_[8] = true;
+        dirtyFlag_[7] = true;
         if(!pJson["train_type"].isNull())
         {
             trainType_=std::make_shared<int32_t>((int32_t)pJson["train_type"].asInt64());
         }
     }
-    if(pJson.isMember("seat_type"))
+    if(pJson.isMember("type_1"))
     {
-        dirtyFlag_[9] = true;
-        if(!pJson["seat_type"].isNull())
+        dirtyFlag_[8] = true;
+        if(!pJson["type_1"].isNull())
         {
-            seatType_=std::make_shared<int32_t>((int32_t)pJson["seat_type"].asInt64());
+            type1_=std::make_shared<int32_t>((int32_t)pJson["type_1"].asInt64());
         }
     }
-    if(pJson.isMember("status"))
+    if(pJson.isMember("type_2"))
+    {
+        dirtyFlag_[9] = true;
+        if(!pJson["type_2"].isNull())
+        {
+            type2_=std::make_shared<int32_t>((int32_t)pJson["type_2"].asInt64());
+        }
+    }
+    if(pJson.isMember("type_3"))
     {
         dirtyFlag_[10] = true;
-        if(!pJson["status"].isNull())
+        if(!pJson["type_3"].isNull())
         {
-            status_=std::make_shared<int32_t>((int32_t)pJson["status"].asInt64());
+            type3_=std::make_shared<int32_t>((int32_t)pJson["type_3"].asInt64());
+        }
+    }
+    if(pJson.isMember("type_4"))
+    {
+        dirtyFlag_[11] = true;
+        if(!pJson["type_4"].isNull())
+        {
+            type4_=std::make_shared<int32_t>((int32_t)pJson["type_4"].asInt64());
         }
     }
 }
@@ -701,7 +900,7 @@ const std::shared_ptr<::trantor::Date> &Tickets::getStartDate() const noexcept
 }
 void Tickets::setStartDate(const ::trantor::Date &pStartDate) noexcept
 {
-    startDate_ = std::make_shared<::trantor::Date>(pStartDate.roundDay());
+    startDate_ = std::make_shared<::trantor::Date>(pStartDate);
     dirtyFlag_[4] = true;
 }
 
@@ -718,30 +917,8 @@ const std::shared_ptr<::trantor::Date> &Tickets::getEndDate() const noexcept
 }
 void Tickets::setEndDate(const ::trantor::Date &pEndDate) noexcept
 {
-    endDate_ = std::make_shared<::trantor::Date>(pEndDate.roundDay());
+    endDate_ = std::make_shared<::trantor::Date>(pEndDate);
     dirtyFlag_[5] = true;
-}
-
-const std::string &Tickets::getValueOfTime() const noexcept
-{
-    static const std::string defaultValue = std::string();
-    if(time_)
-        return *time_;
-    return defaultValue;
-}
-const std::shared_ptr<std::string> &Tickets::getTime() const noexcept
-{
-    return time_;
-}
-void Tickets::setTime(const std::string &pTime) noexcept
-{
-    time_ = std::make_shared<std::string>(pTime);
-    dirtyFlag_[6] = true;
-}
-void Tickets::setTime(std::string &&pTime) noexcept
-{
-    time_ = std::make_shared<std::string>(std::move(pTime));
-    dirtyFlag_[6] = true;
 }
 
 const std::string &Tickets::getValueOfPrice() const noexcept
@@ -758,12 +935,12 @@ const std::shared_ptr<std::string> &Tickets::getPrice() const noexcept
 void Tickets::setPrice(const std::string &pPrice) noexcept
 {
     price_ = std::make_shared<std::string>(pPrice);
-    dirtyFlag_[7] = true;
+    dirtyFlag_[6] = true;
 }
 void Tickets::setPrice(std::string &&pPrice) noexcept
 {
     price_ = std::make_shared<std::string>(std::move(pPrice));
-    dirtyFlag_[7] = true;
+    dirtyFlag_[6] = true;
 }
 
 const int32_t &Tickets::getValueOfTrainType() const noexcept
@@ -780,41 +957,90 @@ const std::shared_ptr<int32_t> &Tickets::getTrainType() const noexcept
 void Tickets::setTrainType(const int32_t &pTrainType) noexcept
 {
     trainType_ = std::make_shared<int32_t>(pTrainType);
+    dirtyFlag_[7] = true;
+}
+
+const int32_t &Tickets::getValueOfType1() const noexcept
+{
+    static const int32_t defaultValue = int32_t();
+    if(type1_)
+        return *type1_;
+    return defaultValue;
+}
+const std::shared_ptr<int32_t> &Tickets::getType1() const noexcept
+{
+    return type1_;
+}
+void Tickets::setType1(const int32_t &pType1) noexcept
+{
+    type1_ = std::make_shared<int32_t>(pType1);
     dirtyFlag_[8] = true;
 }
 
-const int32_t &Tickets::getValueOfSeatType() const noexcept
+const int32_t &Tickets::getValueOfType2() const noexcept
 {
     static const int32_t defaultValue = int32_t();
-    if(seatType_)
-        return *seatType_;
+    if(type2_)
+        return *type2_;
     return defaultValue;
 }
-const std::shared_ptr<int32_t> &Tickets::getSeatType() const noexcept
+const std::shared_ptr<int32_t> &Tickets::getType2() const noexcept
 {
-    return seatType_;
+    return type2_;
 }
-void Tickets::setSeatType(const int32_t &pSeatType) noexcept
+void Tickets::setType2(const int32_t &pType2) noexcept
 {
-    seatType_ = std::make_shared<int32_t>(pSeatType);
+    type2_ = std::make_shared<int32_t>(pType2);
+    dirtyFlag_[9] = true;
+}
+void Tickets::setType2ToNull() noexcept
+{
+    type2_.reset();
     dirtyFlag_[9] = true;
 }
 
-const int32_t &Tickets::getValueOfStatus() const noexcept
+const int32_t &Tickets::getValueOfType3() const noexcept
 {
     static const int32_t defaultValue = int32_t();
-    if(status_)
-        return *status_;
+    if(type3_)
+        return *type3_;
     return defaultValue;
 }
-const std::shared_ptr<int32_t> &Tickets::getStatus() const noexcept
+const std::shared_ptr<int32_t> &Tickets::getType3() const noexcept
 {
-    return status_;
+    return type3_;
 }
-void Tickets::setStatus(const int32_t &pStatus) noexcept
+void Tickets::setType3(const int32_t &pType3) noexcept
 {
-    status_ = std::make_shared<int32_t>(pStatus);
+    type3_ = std::make_shared<int32_t>(pType3);
     dirtyFlag_[10] = true;
+}
+void Tickets::setType3ToNull() noexcept
+{
+    type3_.reset();
+    dirtyFlag_[10] = true;
+}
+
+const int32_t &Tickets::getValueOfType4() const noexcept
+{
+    static const int32_t defaultValue = int32_t();
+    if(type4_)
+        return *type4_;
+    return defaultValue;
+}
+const std::shared_ptr<int32_t> &Tickets::getType4() const noexcept
+{
+    return type4_;
+}
+void Tickets::setType4(const int32_t &pType4) noexcept
+{
+    type4_ = std::make_shared<int32_t>(pType4);
+    dirtyFlag_[11] = true;
+}
+void Tickets::setType4ToNull() noexcept
+{
+    type4_.reset();
+    dirtyFlag_[11] = true;
 }
 
 void Tickets::updateId(const uint64_t id)
@@ -829,11 +1055,12 @@ const std::vector<std::string> &Tickets::insertColumns() noexcept
         "to",
         "start_date",
         "end_date",
-        "time",
         "price",
         "train_type",
-        "seat_type",
-        "status"
+        "type_1",
+        "type_2",
+        "type_3",
+        "type_4"
     };
     return inCols;
 }
@@ -897,17 +1124,6 @@ void Tickets::outputArgs(drogon::orm::internal::SqlBinder &binder) const
     }
     if(dirtyFlag_[6])
     {
-        if(getTime())
-        {
-            binder << getValueOfTime();
-        }
-        else
-        {
-            binder << nullptr;
-        }
-    }
-    if(dirtyFlag_[7])
-    {
         if(getPrice())
         {
             binder << getValueOfPrice();
@@ -917,7 +1133,7 @@ void Tickets::outputArgs(drogon::orm::internal::SqlBinder &binder) const
             binder << nullptr;
         }
     }
-    if(dirtyFlag_[8])
+    if(dirtyFlag_[7])
     {
         if(getTrainType())
         {
@@ -928,11 +1144,22 @@ void Tickets::outputArgs(drogon::orm::internal::SqlBinder &binder) const
             binder << nullptr;
         }
     }
+    if(dirtyFlag_[8])
+    {
+        if(getType1())
+        {
+            binder << getValueOfType1();
+        }
+        else
+        {
+            binder << nullptr;
+        }
+    }
     if(dirtyFlag_[9])
     {
-        if(getSeatType())
+        if(getType2())
         {
-            binder << getValueOfSeatType();
+            binder << getValueOfType2();
         }
         else
         {
@@ -941,9 +1168,20 @@ void Tickets::outputArgs(drogon::orm::internal::SqlBinder &binder) const
     }
     if(dirtyFlag_[10])
     {
-        if(getStatus())
+        if(getType3())
         {
-            binder << getValueOfStatus();
+            binder << getValueOfType3();
+        }
+        else
+        {
+            binder << nullptr;
+        }
+    }
+    if(dirtyFlag_[11])
+    {
+        if(getType4())
+        {
+            binder << getValueOfType4();
         }
         else
         {
@@ -994,6 +1232,10 @@ const std::vector<std::string> Tickets::updateColumns() const
     if(dirtyFlag_[10])
     {
         ret.push_back(getColumnName(10));
+    }
+    if(dirtyFlag_[11])
+    {
+        ret.push_back(getColumnName(11));
     }
     return ret;
 }
@@ -1057,17 +1299,6 @@ void Tickets::updateArgs(drogon::orm::internal::SqlBinder &binder) const
     }
     if(dirtyFlag_[6])
     {
-        if(getTime())
-        {
-            binder << getValueOfTime();
-        }
-        else
-        {
-            binder << nullptr;
-        }
-    }
-    if(dirtyFlag_[7])
-    {
         if(getPrice())
         {
             binder << getValueOfPrice();
@@ -1077,7 +1308,7 @@ void Tickets::updateArgs(drogon::orm::internal::SqlBinder &binder) const
             binder << nullptr;
         }
     }
-    if(dirtyFlag_[8])
+    if(dirtyFlag_[7])
     {
         if(getTrainType())
         {
@@ -1088,11 +1319,22 @@ void Tickets::updateArgs(drogon::orm::internal::SqlBinder &binder) const
             binder << nullptr;
         }
     }
+    if(dirtyFlag_[8])
+    {
+        if(getType1())
+        {
+            binder << getValueOfType1();
+        }
+        else
+        {
+            binder << nullptr;
+        }
+    }
     if(dirtyFlag_[9])
     {
-        if(getSeatType())
+        if(getType2())
         {
-            binder << getValueOfSeatType();
+            binder << getValueOfType2();
         }
         else
         {
@@ -1101,9 +1343,20 @@ void Tickets::updateArgs(drogon::orm::internal::SqlBinder &binder) const
     }
     if(dirtyFlag_[10])
     {
-        if(getStatus())
+        if(getType3())
         {
-            binder << getValueOfStatus();
+            binder << getValueOfType3();
+        }
+        else
+        {
+            binder << nullptr;
+        }
+    }
+    if(dirtyFlag_[11])
+    {
+        if(getType4())
+        {
+            binder << getValueOfType4();
         }
         else
         {
@@ -1162,14 +1415,6 @@ Json::Value Tickets::toJson() const
     {
         ret["end_date"]=Json::Value();
     }
-    if(getTime())
-    {
-        ret["time"]=getValueOfTime();
-    }
-    else
-    {
-        ret["time"]=Json::Value();
-    }
     if(getPrice())
     {
         ret["price"]=getValueOfPrice();
@@ -1186,21 +1431,37 @@ Json::Value Tickets::toJson() const
     {
         ret["train_type"]=Json::Value();
     }
-    if(getSeatType())
+    if(getType1())
     {
-        ret["seat_type"]=getValueOfSeatType();
+        ret["type_1"]=getValueOfType1();
     }
     else
     {
-        ret["seat_type"]=Json::Value();
+        ret["type_1"]=Json::Value();
     }
-    if(getStatus())
+    if(getType2())
     {
-        ret["status"]=getValueOfStatus();
+        ret["type_2"]=getValueOfType2();
     }
     else
     {
-        ret["status"]=Json::Value();
+        ret["type_2"]=Json::Value();
+    }
+    if(getType3())
+    {
+        ret["type_3"]=getValueOfType3();
+    }
+    else
+    {
+        ret["type_3"]=Json::Value();
+    }
+    if(getType4())
+    {
+        ret["type_4"]=getValueOfType4();
+    }
+    else
+    {
+        ret["type_4"]=Json::Value();
     }
     return ret;
 }
@@ -1209,7 +1470,7 @@ Json::Value Tickets::toMasqueradedJson(
     const std::vector<std::string> &pMasqueradingVector) const
 {
     Json::Value ret;
-    if(pMasqueradingVector.size() == 11)
+    if(pMasqueradingVector.size() == 12)
     {
         if(!pMasqueradingVector[0].empty())
         {
@@ -1279,9 +1540,9 @@ Json::Value Tickets::toMasqueradedJson(
         }
         if(!pMasqueradingVector[6].empty())
         {
-            if(getTime())
+            if(getPrice())
             {
-                ret[pMasqueradingVector[6]]=getValueOfTime();
+                ret[pMasqueradingVector[6]]=getValueOfPrice();
             }
             else
             {
@@ -1290,9 +1551,9 @@ Json::Value Tickets::toMasqueradedJson(
         }
         if(!pMasqueradingVector[7].empty())
         {
-            if(getPrice())
+            if(getTrainType())
             {
-                ret[pMasqueradingVector[7]]=getValueOfPrice();
+                ret[pMasqueradingVector[7]]=getValueOfTrainType();
             }
             else
             {
@@ -1301,9 +1562,9 @@ Json::Value Tickets::toMasqueradedJson(
         }
         if(!pMasqueradingVector[8].empty())
         {
-            if(getTrainType())
+            if(getType1())
             {
-                ret[pMasqueradingVector[8]]=getValueOfTrainType();
+                ret[pMasqueradingVector[8]]=getValueOfType1();
             }
             else
             {
@@ -1312,9 +1573,9 @@ Json::Value Tickets::toMasqueradedJson(
         }
         if(!pMasqueradingVector[9].empty())
         {
-            if(getSeatType())
+            if(getType2())
             {
-                ret[pMasqueradingVector[9]]=getValueOfSeatType();
+                ret[pMasqueradingVector[9]]=getValueOfType2();
             }
             else
             {
@@ -1323,13 +1584,24 @@ Json::Value Tickets::toMasqueradedJson(
         }
         if(!pMasqueradingVector[10].empty())
         {
-            if(getStatus())
+            if(getType3())
             {
-                ret[pMasqueradingVector[10]]=getValueOfStatus();
+                ret[pMasqueradingVector[10]]=getValueOfType3();
             }
             else
             {
                 ret[pMasqueradingVector[10]]=Json::Value();
+            }
+        }
+        if(!pMasqueradingVector[11].empty())
+        {
+            if(getType4())
+            {
+                ret[pMasqueradingVector[11]]=getValueOfType4();
+            }
+            else
+            {
+                ret[pMasqueradingVector[11]]=Json::Value();
             }
         }
         return ret;
@@ -1383,14 +1655,6 @@ Json::Value Tickets::toMasqueradedJson(
     {
         ret["end_date"]=Json::Value();
     }
-    if(getTime())
-    {
-        ret["time"]=getValueOfTime();
-    }
-    else
-    {
-        ret["time"]=Json::Value();
-    }
     if(getPrice())
     {
         ret["price"]=getValueOfPrice();
@@ -1407,21 +1671,37 @@ Json::Value Tickets::toMasqueradedJson(
     {
         ret["train_type"]=Json::Value();
     }
-    if(getSeatType())
+    if(getType1())
     {
-        ret["seat_type"]=getValueOfSeatType();
+        ret["type_1"]=getValueOfType1();
     }
     else
     {
-        ret["seat_type"]=Json::Value();
+        ret["type_1"]=Json::Value();
     }
-    if(getStatus())
+    if(getType2())
     {
-        ret["status"]=getValueOfStatus();
+        ret["type_2"]=getValueOfType2();
     }
     else
     {
-        ret["status"]=Json::Value();
+        ret["type_2"]=Json::Value();
+    }
+    if(getType3())
+    {
+        ret["type_3"]=getValueOfType3();
+    }
+    else
+    {
+        ret["type_3"]=Json::Value();
+    }
+    if(getType4())
+    {
+        ret["type_4"]=getValueOfType4();
+    }
+    else
+    {
+        ret["type_4"]=Json::Value();
     }
     return ret;
 }
@@ -1483,19 +1763,9 @@ bool Tickets::validateJsonForCreation(const Json::Value &pJson, std::string &err
         err="The end_date column cannot be null";
         return false;
     }
-    if(pJson.isMember("time"))
-    {
-        if(!validJsonOfField(6, "time", pJson["time"], err, true))
-            return false;
-    }
-    else
-    {
-        err="The time column cannot be null";
-        return false;
-    }
     if(pJson.isMember("price"))
     {
-        if(!validJsonOfField(7, "price", pJson["price"], err, true))
+        if(!validJsonOfField(6, "price", pJson["price"], err, true))
             return false;
     }
     else
@@ -1505,7 +1775,7 @@ bool Tickets::validateJsonForCreation(const Json::Value &pJson, std::string &err
     }
     if(pJson.isMember("train_type"))
     {
-        if(!validJsonOfField(8, "train_type", pJson["train_type"], err, true))
+        if(!validJsonOfField(7, "train_type", pJson["train_type"], err, true))
             return false;
     }
     else
@@ -1513,25 +1783,30 @@ bool Tickets::validateJsonForCreation(const Json::Value &pJson, std::string &err
         err="The train_type column cannot be null";
         return false;
     }
-    if(pJson.isMember("seat_type"))
+    if(pJson.isMember("type_1"))
     {
-        if(!validJsonOfField(9, "seat_type", pJson["seat_type"], err, true))
+        if(!validJsonOfField(8, "type_1", pJson["type_1"], err, true))
             return false;
     }
     else
     {
-        err="The seat_type column cannot be null";
+        err="The type_1 column cannot be null";
         return false;
     }
-    if(pJson.isMember("status"))
+    if(pJson.isMember("type_2"))
     {
-        if(!validJsonOfField(10, "status", pJson["status"], err, true))
+        if(!validJsonOfField(9, "type_2", pJson["type_2"], err, true))
             return false;
     }
-    else
+    if(pJson.isMember("type_3"))
     {
-        err="The status column cannot be null";
-        return false;
+        if(!validJsonOfField(10, "type_3", pJson["type_3"], err, true))
+            return false;
+    }
+    if(pJson.isMember("type_4"))
+    {
+        if(!validJsonOfField(11, "type_4", pJson["type_4"], err, true))
+            return false;
     }
     return true;
 }
@@ -1539,7 +1814,7 @@ bool Tickets::validateMasqueradedJsonForCreation(const Json::Value &pJson,
                                                  const std::vector<std::string> &pMasqueradingVector,
                                                  std::string &err)
 {
-    if(pMasqueradingVector.size() != 11)
+    if(pMasqueradingVector.size() != 12)
     {
         err = "Bad masquerading vector";
         return false;
@@ -1664,11 +1939,6 @@ bool Tickets::validateMasqueradedJsonForCreation(const Json::Value &pJson,
               if(!validJsonOfField(9, pMasqueradingVector[9], pJson[pMasqueradingVector[9]], err, true))
                   return false;
           }
-        else
-        {
-            err="The " + pMasqueradingVector[9] + " column cannot be null";
-            return false;
-        }
       }
       if(!pMasqueradingVector[10].empty())
       {
@@ -1677,11 +1947,14 @@ bool Tickets::validateMasqueradedJsonForCreation(const Json::Value &pJson,
               if(!validJsonOfField(10, pMasqueradingVector[10], pJson[pMasqueradingVector[10]], err, true))
                   return false;
           }
-        else
-        {
-            err="The " + pMasqueradingVector[10] + " column cannot be null";
-            return false;
-        }
+      }
+      if(!pMasqueradingVector[11].empty())
+      {
+          if(pJson.isMember(pMasqueradingVector[11]))
+          {
+              if(!validJsonOfField(11, pMasqueradingVector[11], pJson[pMasqueradingVector[11]], err, true))
+                  return false;
+          }
       }
     }
     catch(const Json::LogicError &e)
@@ -1728,29 +2001,34 @@ bool Tickets::validateJsonForUpdate(const Json::Value &pJson, std::string &err)
         if(!validJsonOfField(5, "end_date", pJson["end_date"], err, false))
             return false;
     }
-    if(pJson.isMember("time"))
-    {
-        if(!validJsonOfField(6, "time", pJson["time"], err, false))
-            return false;
-    }
     if(pJson.isMember("price"))
     {
-        if(!validJsonOfField(7, "price", pJson["price"], err, false))
+        if(!validJsonOfField(6, "price", pJson["price"], err, false))
             return false;
     }
     if(pJson.isMember("train_type"))
     {
-        if(!validJsonOfField(8, "train_type", pJson["train_type"], err, false))
+        if(!validJsonOfField(7, "train_type", pJson["train_type"], err, false))
             return false;
     }
-    if(pJson.isMember("seat_type"))
+    if(pJson.isMember("type_1"))
     {
-        if(!validJsonOfField(9, "seat_type", pJson["seat_type"], err, false))
+        if(!validJsonOfField(8, "type_1", pJson["type_1"], err, false))
             return false;
     }
-    if(pJson.isMember("status"))
+    if(pJson.isMember("type_2"))
     {
-        if(!validJsonOfField(10, "status", pJson["status"], err, false))
+        if(!validJsonOfField(9, "type_2", pJson["type_2"], err, false))
+            return false;
+    }
+    if(pJson.isMember("type_3"))
+    {
+        if(!validJsonOfField(10, "type_3", pJson["type_3"], err, false))
+            return false;
+    }
+    if(pJson.isMember("type_4"))
+    {
+        if(!validJsonOfField(11, "type_4", pJson["type_4"], err, false))
             return false;
     }
     return true;
@@ -1759,7 +2037,7 @@ bool Tickets::validateMasqueradedJsonForUpdate(const Json::Value &pJson,
                                                const std::vector<std::string> &pMasqueradingVector,
                                                std::string &err)
 {
-    if(pMasqueradingVector.size() != 11)
+    if(pMasqueradingVector.size() != 12)
     {
         err = "Bad masquerading vector";
         return false;
@@ -1823,6 +2101,11 @@ bool Tickets::validateMasqueradedJsonForUpdate(const Json::Value &pJson,
       if(!pMasqueradingVector[10].empty() && pJson.isMember(pMasqueradingVector[10]))
       {
           if(!validJsonOfField(10, pMasqueradingVector[10], pJson[pMasqueradingVector[10]], err, false))
+              return false;
+      }
+      if(!pMasqueradingVector[11].empty() && pJson.isMember(pMasqueradingVector[11]))
+      {
+          if(!validJsonOfField(11, pMasqueradingVector[11], pJson[pMasqueradingVector[11]], err, false))
               return false;
       }
     }
@@ -1963,7 +2246,7 @@ bool Tickets::validJsonOfField(size_t index,
                 err="The " + fieldName + " column cannot be null";
                 return false;
             }
-            if(!pJson.isString())
+            if(!pJson.isInt())
             {
                 err="Type error in the "+fieldName+" field";
                 return false;
@@ -1984,8 +2267,7 @@ bool Tickets::validJsonOfField(size_t index,
         case 9:
             if(pJson.isNull())
             {
-                err="The " + fieldName + " column cannot be null";
-                return false;
+                return true;
             }
             if(!pJson.isInt())
             {
@@ -1996,8 +2278,18 @@ bool Tickets::validJsonOfField(size_t index,
         case 10:
             if(pJson.isNull())
             {
-                err="The " + fieldName + " column cannot be null";
+                return true;
+            }
+            if(!pJson.isInt())
+            {
+                err="Type error in the "+fieldName+" field";
                 return false;
+            }
+            break;
+        case 11:
+            if(pJson.isNull())
+            {
+                return true;
             }
             if(!pJson.isInt())
             {

@@ -54,7 +54,7 @@ class Users
         static const std::string _created_at;
         static const std::string _is_verified;
         static const std::string _is_student;
-        static const std::string _cutCount;
+        static const std::string _discount_times;
     };
 
     static const int primaryKeyNumber;
@@ -199,14 +199,14 @@ class Users
     void setIsStudent(const bool &pIsStudent) noexcept;
     void setIsStudentToNull() noexcept;
 
-    /**  For column cutCount  */
-    ///Get the value of the column cutCount, returns the default value if the column is null
-    const int32_t &getValueOfCutcount() const noexcept;
+    /**  For column discount_times  */
+    ///Get the value of the column discount_times, returns the default value if the column is null
+    const int32_t &getValueOfDiscountTimes() const noexcept;
     ///Return a shared_ptr object pointing to the column const value, or an empty shared_ptr object if the column is null
-    const std::shared_ptr<int32_t> &getCutcount() const noexcept;
-    ///Set the value of the column cutCount
-    void setCutcount(const int32_t &pCutcount) noexcept;
-    void setCutcountToNull() noexcept;
+    const std::shared_ptr<int32_t> &getDiscountTimes() const noexcept;
+    ///Set the value of the column discount_times
+    void setDiscountTimes(const int32_t &pDiscountTimes) noexcept;
+    void setDiscountTimesToNull() noexcept;
 
 
     static size_t getColumnNumber() noexcept {  return 11;  }
@@ -240,7 +240,7 @@ class Users
     std::shared_ptr<::trantor::Date> createdAt_;
     std::shared_ptr<bool> isVerified_;
     std::shared_ptr<bool> isStudent_;
-    std::shared_ptr<int32_t> cutcount_;
+    std::shared_ptr<int32_t> discountTimes_;
     struct MetaData
     {
         const std::string colName_;
@@ -320,7 +320,7 @@ class Users
         {
             needSelection=true;
         }
-        sql += "cutCount,";
+        sql += "discount_times,";
         ++parametersCount;
         if(!dirtyFlag_[10])
         {

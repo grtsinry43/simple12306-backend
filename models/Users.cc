@@ -23,7 +23,7 @@ const std::string Users::Cols::_region = "region";
 const std::string Users::Cols::_created_at = "created_at";
 const std::string Users::Cols::_is_verified = "is_verified";
 const std::string Users::Cols::_is_student = "is_student";
-const std::string Users::Cols::_cutCount = "cutCount";
+const std::string Users::Cols::_discount_times = "discount_times";
 const std::string Users::primaryKeyName = "user_id";
 const bool Users::hasPrimaryKey = true;
 const std::string Users::tableName = "users";
@@ -39,7 +39,7 @@ const std::vector<typename Users::MetaData> Users::metaData_={
 {"created_at","::trantor::Date","timestamp without time zone",0,0,0,0},
 {"is_verified","bool","boolean",1,0,0,0},
 {"is_student","bool","boolean",1,0,0,0},
-{"cutCount","int32_t","integer",4,0,0,0}
+{"discount_times","int32_t","integer",4,0,0,0}
 };
 const std::string &Users::getColumnName(size_t index) noexcept(false)
 {
@@ -108,9 +108,9 @@ Users::Users(const Row &r, const ssize_t indexOffset) noexcept
         {
             isStudent_=std::make_shared<bool>(r["is_student"].as<bool>());
         }
-        if(!r["cutCount"].isNull())
+        if(!r["discount_times"].isNull())
         {
-            cutcount_=std::make_shared<int32_t>(r["cutCount"].as<int32_t>());
+            discountTimes_=std::make_shared<int32_t>(r["discount_times"].as<int32_t>());
         }
     }
     else
@@ -193,7 +193,7 @@ Users::Users(const Row &r, const ssize_t indexOffset) noexcept
         index = offset + 10;
         if(!r[index].isNull())
         {
-            cutcount_=std::make_shared<int32_t>(r[index].as<int32_t>());
+            discountTimes_=std::make_shared<int32_t>(r[index].as<int32_t>());
         }
     }
 
@@ -309,7 +309,7 @@ Users::Users(const Json::Value &pJson, const std::vector<std::string> &pMasquera
         dirtyFlag_[10] = true;
         if(!pJson[pMasqueradingVector[10]].isNull())
         {
-            cutcount_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[10]].asInt64());
+            discountTimes_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[10]].asInt64());
         }
     }
 }
@@ -414,12 +414,12 @@ Users::Users(const Json::Value &pJson) noexcept(false)
             isStudent_=std::make_shared<bool>(pJson["is_student"].asBool());
         }
     }
-    if(pJson.isMember("cutCount"))
+    if(pJson.isMember("discount_times"))
     {
         dirtyFlag_[10]=true;
-        if(!pJson["cutCount"].isNull())
+        if(!pJson["discount_times"].isNull())
         {
-            cutcount_=std::make_shared<int32_t>((int32_t)pJson["cutCount"].asInt64());
+            discountTimes_=std::make_shared<int32_t>((int32_t)pJson["discount_times"].asInt64());
         }
     }
 }
@@ -534,7 +534,7 @@ void Users::updateByMasqueradedJson(const Json::Value &pJson,
         dirtyFlag_[10] = true;
         if(!pJson[pMasqueradingVector[10]].isNull())
         {
-            cutcount_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[10]].asInt64());
+            discountTimes_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[10]].asInt64());
         }
     }
 }
@@ -638,12 +638,12 @@ void Users::updateByJson(const Json::Value &pJson) noexcept(false)
             isStudent_=std::make_shared<bool>(pJson["is_student"].asBool());
         }
     }
-    if(pJson.isMember("cutCount"))
+    if(pJson.isMember("discount_times"))
     {
         dirtyFlag_[10] = true;
-        if(!pJson["cutCount"].isNull())
+        if(!pJson["discount_times"].isNull())
         {
-            cutcount_=std::make_shared<int32_t>((int32_t)pJson["cutCount"].asInt64());
+            discountTimes_=std::make_shared<int32_t>((int32_t)pJson["discount_times"].asInt64());
         }
     }
 }
@@ -888,25 +888,25 @@ void Users::setIsStudentToNull() noexcept
     dirtyFlag_[9] = true;
 }
 
-const int32_t &Users::getValueOfCutcount() const noexcept
+const int32_t &Users::getValueOfDiscountTimes() const noexcept
 {
     static const int32_t defaultValue = int32_t();
-    if(cutcount_)
-        return *cutcount_;
+    if(discountTimes_)
+        return *discountTimes_;
     return defaultValue;
 }
-const std::shared_ptr<int32_t> &Users::getCutcount() const noexcept
+const std::shared_ptr<int32_t> &Users::getDiscountTimes() const noexcept
 {
-    return cutcount_;
+    return discountTimes_;
 }
-void Users::setCutcount(const int32_t &pCutcount) noexcept
+void Users::setDiscountTimes(const int32_t &pDiscountTimes) noexcept
 {
-    cutcount_ = std::make_shared<int32_t>(pCutcount);
+    discountTimes_ = std::make_shared<int32_t>(pDiscountTimes);
     dirtyFlag_[10] = true;
 }
-void Users::setCutcountToNull() noexcept
+void Users::setDiscountTimesToNull() noexcept
 {
-    cutcount_.reset();
+    discountTimes_.reset();
     dirtyFlag_[10] = true;
 }
 
@@ -926,7 +926,7 @@ const std::vector<std::string> &Users::insertColumns() noexcept
         "created_at",
         "is_verified",
         "is_student",
-        "cutCount"
+        "discount_times"
     };
     return inCols;
 }
@@ -1034,9 +1034,9 @@ void Users::outputArgs(drogon::orm::internal::SqlBinder &binder) const
     }
     if(dirtyFlag_[10])
     {
-        if(getCutcount())
+        if(getDiscountTimes())
         {
-            binder << getValueOfCutcount();
+            binder << getValueOfDiscountTimes();
         }
         else
         {
@@ -1194,9 +1194,9 @@ void Users::updateArgs(drogon::orm::internal::SqlBinder &binder) const
     }
     if(dirtyFlag_[10])
     {
-        if(getCutcount())
+        if(getDiscountTimes())
         {
-            binder << getValueOfCutcount();
+            binder << getValueOfDiscountTimes();
         }
         else
         {
@@ -1287,13 +1287,13 @@ Json::Value Users::toJson() const
     {
         ret["is_student"]=Json::Value();
     }
-    if(getCutcount())
+    if(getDiscountTimes())
     {
-        ret["cutCount"]=getValueOfCutcount();
+        ret["discount_times"]=getValueOfDiscountTimes();
     }
     else
     {
-        ret["cutCount"]=Json::Value();
+        ret["discount_times"]=Json::Value();
     }
     return ret;
 }
@@ -1416,9 +1416,9 @@ Json::Value Users::toMasqueradedJson(
         }
         if(!pMasqueradingVector[10].empty())
         {
-            if(getCutcount())
+            if(getDiscountTimes())
             {
-                ret[pMasqueradingVector[10]]=getValueOfCutcount();
+                ret[pMasqueradingVector[10]]=getValueOfDiscountTimes();
             }
             else
             {
@@ -1508,13 +1508,13 @@ Json::Value Users::toMasqueradedJson(
     {
         ret["is_student"]=Json::Value();
     }
-    if(getCutcount())
+    if(getDiscountTimes())
     {
-        ret["cutCount"]=getValueOfCutcount();
+        ret["discount_times"]=getValueOfDiscountTimes();
     }
     else
     {
-        ret["cutCount"]=Json::Value();
+        ret["discount_times"]=Json::Value();
     }
     return ret;
 }
@@ -1581,9 +1581,9 @@ bool Users::validateJsonForCreation(const Json::Value &pJson, std::string &err)
         if(!validJsonOfField(9, "is_student", pJson["is_student"], err, true))
             return false;
     }
-    if(pJson.isMember("cutCount"))
+    if(pJson.isMember("discount_times"))
     {
-        if(!validJsonOfField(10, "cutCount", pJson["cutCount"], err, true))
+        if(!validJsonOfField(10, "discount_times", pJson["discount_times"], err, true))
             return false;
     }
     return true;
@@ -1761,9 +1761,9 @@ bool Users::validateJsonForUpdate(const Json::Value &pJson, std::string &err)
         if(!validJsonOfField(9, "is_student", pJson["is_student"], err, false))
             return false;
     }
-    if(pJson.isMember("cutCount"))
+    if(pJson.isMember("discount_times"))
     {
-        if(!validJsonOfField(10, "cutCount", pJson["cutCount"], err, false))
+        if(!validJsonOfField(10, "discount_times", pJson["discount_times"], err, false))
             return false;
     }
     return true;

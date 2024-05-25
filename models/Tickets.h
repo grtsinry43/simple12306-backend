@@ -50,11 +50,12 @@ class Tickets
         static const std::string _to;
         static const std::string _start_date;
         static const std::string _end_date;
-        static const std::string _time;
         static const std::string _price;
         static const std::string _train_type;
-        static const std::string _seat_type;
-        static const std::string _status;
+        static const std::string _type_1;
+        static const std::string _type_2;
+        static const std::string _type_3;
+        static const std::string _type_4;
     };
 
     static const int primaryKeyNumber;
@@ -157,15 +158,6 @@ class Tickets
     ///Set the value of the column end_date
     void setEndDate(const ::trantor::Date &pEndDate) noexcept;
 
-    /**  For column time  */
-    ///Get the value of the column time, returns the default value if the column is null
-    const std::string &getValueOfTime() const noexcept;
-    ///Return a shared_ptr object pointing to the column const value, or an empty shared_ptr object if the column is null
-    const std::shared_ptr<std::string> &getTime() const noexcept;
-    ///Set the value of the column time
-    void setTime(const std::string &pTime) noexcept;
-    void setTime(std::string &&pTime) noexcept;
-
     /**  For column price  */
     ///Get the value of the column price, returns the default value if the column is null
     const std::string &getValueOfPrice() const noexcept;
@@ -183,24 +175,43 @@ class Tickets
     ///Set the value of the column train_type
     void setTrainType(const int32_t &pTrainType) noexcept;
 
-    /**  For column seat_type  */
-    ///Get the value of the column seat_type, returns the default value if the column is null
-    const int32_t &getValueOfSeatType() const noexcept;
+    /**  For column type_1  */
+    ///Get the value of the column type_1, returns the default value if the column is null
+    const int32_t &getValueOfType1() const noexcept;
     ///Return a shared_ptr object pointing to the column const value, or an empty shared_ptr object if the column is null
-    const std::shared_ptr<int32_t> &getSeatType() const noexcept;
-    ///Set the value of the column seat_type
-    void setSeatType(const int32_t &pSeatType) noexcept;
+    const std::shared_ptr<int32_t> &getType1() const noexcept;
+    ///Set the value of the column type_1
+    void setType1(const int32_t &pType1) noexcept;
 
-    /**  For column status  */
-    ///Get the value of the column status, returns the default value if the column is null
-    const int32_t &getValueOfStatus() const noexcept;
+    /**  For column type_2  */
+    ///Get the value of the column type_2, returns the default value if the column is null
+    const int32_t &getValueOfType2() const noexcept;
     ///Return a shared_ptr object pointing to the column const value, or an empty shared_ptr object if the column is null
-    const std::shared_ptr<int32_t> &getStatus() const noexcept;
-    ///Set the value of the column status
-    void setStatus(const int32_t &pStatus) noexcept;
+    const std::shared_ptr<int32_t> &getType2() const noexcept;
+    ///Set the value of the column type_2
+    void setType2(const int32_t &pType2) noexcept;
+    void setType2ToNull() noexcept;
+
+    /**  For column type_3  */
+    ///Get the value of the column type_3, returns the default value if the column is null
+    const int32_t &getValueOfType3() const noexcept;
+    ///Return a shared_ptr object pointing to the column const value, or an empty shared_ptr object if the column is null
+    const std::shared_ptr<int32_t> &getType3() const noexcept;
+    ///Set the value of the column type_3
+    void setType3(const int32_t &pType3) noexcept;
+    void setType3ToNull() noexcept;
+
+    /**  For column type_4  */
+    ///Get the value of the column type_4, returns the default value if the column is null
+    const int32_t &getValueOfType4() const noexcept;
+    ///Return a shared_ptr object pointing to the column const value, or an empty shared_ptr object if the column is null
+    const std::shared_ptr<int32_t> &getType4() const noexcept;
+    ///Set the value of the column type_4
+    void setType4(const int32_t &pType4) noexcept;
+    void setType4ToNull() noexcept;
 
 
-    static size_t getColumnNumber() noexcept {  return 11;  }
+    static size_t getColumnNumber() noexcept {  return 12;  }
     static const std::string &getColumnName(size_t index) noexcept(false);
 
     Json::Value toJson() const;
@@ -227,11 +238,12 @@ class Tickets
     std::shared_ptr<std::string> to_;
     std::shared_ptr<::trantor::Date> startDate_;
     std::shared_ptr<::trantor::Date> endDate_;
-    std::shared_ptr<std::string> time_;
     std::shared_ptr<std::string> price_;
     std::shared_ptr<int32_t> trainType_;
-    std::shared_ptr<int32_t> seatType_;
-    std::shared_ptr<int32_t> status_;
+    std::shared_ptr<int32_t> type1_;
+    std::shared_ptr<int32_t> type2_;
+    std::shared_ptr<int32_t> type3_;
+    std::shared_ptr<int32_t> type4_;
     struct MetaData
     {
         const std::string colName_;
@@ -243,7 +255,7 @@ class Tickets
         const bool notNull_;
     };
     static const std::vector<MetaData> metaData_;
-    bool dirtyFlag_[11]={ false };
+    bool dirtyFlag_[12]={ false };
   public:
     static const std::string &sqlForFindingByPrimaryKey()
     {
@@ -290,27 +302,32 @@ class Tickets
         }
         if(dirtyFlag_[6])
         {
-            sql += "time,";
+            sql += "price,";
             ++parametersCount;
         }
         if(dirtyFlag_[7])
         {
-            sql += "price,";
+            sql += "train_type,";
             ++parametersCount;
         }
         if(dirtyFlag_[8])
         {
-            sql += "train_type,";
+            sql += "type_1,";
             ++parametersCount;
         }
         if(dirtyFlag_[9])
         {
-            sql += "seat_type,";
+            sql += "type_2,";
             ++parametersCount;
         }
         if(dirtyFlag_[10])
         {
-            sql += "status,";
+            sql += "type_3,";
+            ++parametersCount;
+        }
+        if(dirtyFlag_[11])
+        {
+            sql += "type_4,";
             ++parametersCount;
         }
         needSelection=true;
@@ -372,6 +389,11 @@ class Tickets
             sql.append(placeholderStr, n);
         }
         if(dirtyFlag_[10])
+        {
+            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
+            sql.append(placeholderStr, n);
+        }
+        if(dirtyFlag_[11])
         {
             n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
             sql.append(placeholderStr, n);

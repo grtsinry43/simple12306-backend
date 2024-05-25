@@ -23,6 +23,8 @@ add_executable(${PROJECT_NAME} main.cc
         filters/UserFilter.cpp
         filters/UserFilter.h
         controllers/api_user.cc
+        controllers/api_tickets.cc
+        controllers/api_order.cc
 )
 
 # ##############################################################################
