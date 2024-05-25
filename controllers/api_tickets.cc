@@ -102,3 +102,36 @@ void tickets::buyTicket(int ticketId, int typeId) {
         }
     }
 }
+
+void tickets::returnTicket(int ticketId, int typeId) {
+    drogon::orm::DbClientPtr client = drogon::app().getDbClient();
+    drogon::orm::Mapper<drogon_model::simple12306::Tickets> mapper(client);
+    std::vector<drogon_model::simple12306::Tickets> ticketsFind = mapper.orderBy(
+            drogon_model::simple12306::Tickets::Cols::_id).findAll();
+    if (ticketsFind.empty()) {
+        return;
+    } else {
+        for (auto &ticket: ticketsFind) {
+            //对的id才匹配
+            if (ticket.getValueOfId() == ticketId) {
+                switch (typeId) {
+                    case 1:
+                        ticket.setType1(ticket.getValueOfType1() + 1);
+                        break;
+                    case 2:
+                        ticket.setType2(ticket.getValueOfType2() + 1);
+                        break;
+                    case 3:
+                        ticket.setType3(ticket.getValueOfType3() + 1);
+                        break;
+                    case 4:
+                        ticket.setType4(ticket.getValueOfType4() + 1);
+                        break;
+                    default:
+                        return;
+                }
+                mapper.update(ticket);
+            }
+        }
+    }
+}

@@ -24,5 +24,7 @@ namespace api {
         static bool haveTicket(int ticketId, int typeId);
 
         static void buyTicket(int ticketId, int typeId);
+
+        static void returnTicket(int ticketId, int typeId);
     };
 }

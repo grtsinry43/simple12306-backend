@@ -50,6 +50,7 @@ class Orders
         static const std::string _status;
         static const std::string _created_at;
         static const std::string _user_info;
+        static const std::string _type;
     };
 
     static const int primaryKeyNumber;
@@ -150,8 +151,17 @@ class Orders
     void setUserInfo(const std::string &pUserInfo) noexcept;
     void setUserInfo(std::string &&pUserInfo) noexcept;
 
+    /**  For column type  */
+    ///Get the value of the column type, returns the default value if the column is null
+    const int32_t &getValueOfType() const noexcept;
+    ///Return a shared_ptr object pointing to the column const value, or an empty shared_ptr object if the column is null
+    const std::shared_ptr<int32_t> &getType() const noexcept;
+    ///Set the value of the column type
+    void setType(const int32_t &pType) noexcept;
+    void setTypeToNull() noexcept;
 
-    static size_t getColumnNumber() noexcept {  return 6;  }
+
+    static size_t getColumnNumber() noexcept {  return 7;  }
     static const std::string &getColumnName(size_t index) noexcept(false);
 
     Json::Value toJson() const;
@@ -178,6 +188,7 @@ class Orders
     std::shared_ptr<int32_t> status_;
     std::shared_ptr<::trantor::Date> createdAt_;
     std::shared_ptr<std::string> userInfo_;
+    std::shared_ptr<int32_t> type_;
     struct MetaData
     {
         const std::string colName_;
@@ -189,7 +200,7 @@ class Orders
         const bool notNull_;
     };
     static const std::vector<MetaData> metaData_;
-    bool dirtyFlag_[6]={ false };
+    bool dirtyFlag_[7]={ false };
   public:
     static const std::string &sqlForFindingByPrimaryKey()
     {
@@ -235,6 +246,11 @@ class Orders
             sql += "user_info,";
             ++parametersCount;
         }
+        if(dirtyFlag_[6])
+        {
+            sql += "type,";
+            ++parametersCount;
+        }
         needSelection=true;
         if(parametersCount > 0)
         {
@@ -273,6 +289,11 @@ class Orders
             sql +="default,";
         }
         if(dirtyFlag_[5])
+        {
+            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
+            sql.append(placeholderStr, n);
+        }
+        if(dirtyFlag_[6])
         {
             n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
             sql.append(placeholderStr, n);

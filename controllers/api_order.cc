@@ -34,6 +34,7 @@ void order::newOrder(const HttpRequestPtr &req, std::function<void(const HttpRes
     drogon_model::simple12306::Orders order;
     order.setUserId(userId);
     order.setTicketId(ticketId);
+    order.setType(type);
     Json::Value info;
     info["name"] = name;
     info["phone"] = phone;
@@ -53,6 +54,7 @@ void order::newOrder(const HttpRequestPtr &req, std::function<void(const HttpRes
         data["id"] = order.getValueOfId();
         data["status"] = order.getValueOfStatus();
         data["ticket_id"] = order.getValueOfTicketId();
+        data["type"] = order.getValueOfType();
         data["user_id"] = order.getValueOfUserId();
         Json::Value userInfo1;
         Json::Reader reader;
@@ -100,6 +102,7 @@ order::payOrder(const HttpRequestPtr &req, std::function<void(const HttpResponse
                     data["status"] = order.getValueOfStatus();
                     data["ticket_id"] = order.getValueOfTicketId();
                     data["user_id"] = order.getValueOfUserId();
+                    data["type"] = order.getValueOfType();
                     Json::Value userInfo1;
                     Json::Reader reader;
                     reader.parse(order.getValueOfUserInfo(), userInfo1);
@@ -120,5 +123,69 @@ order::payOrder(const HttpRequestPtr &req, std::function<void(const HttpResponse
             }
         }
     }
+    Json::Value json1;
+    json1["code"] = 404;
+    json1["msg"] = "订单不存在";
+    auto resp = HttpResponse::newHttpJsonResponse(json1);
+    callback(resp);
+}
+
+void order::cancelOrder(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback,
+                        const std::string &orderId) const {
+    drogon::orm::DbClientPtr client = drogon::app().getDbClient();
+    drogon::orm::Mapper<drogon_model::simple12306::Orders> mapper(client);
+    std::vector<drogon_model::simple12306::Orders> ordersFind = mapper.orderBy(
+            drogon_model::simple12306::Orders::Cols::_id).findAll();
+    for (auto &order: ordersFind) {
+        if (order.getValueOfId() == std::stoi(orderId)) {
+            if (order.getValueOfStatus() == 2) {
+                Json::Value json1;
+                json1["code"] = 403;
+                json1["msg"] = "订单已取消";
+                auto resp = HttpResponse::newHttpJsonResponse(json1);
+                callback(resp);
+                return;
+            } else {
+                try {
+                    order.setStatus(2);
+                    mapper.update(order);
+                    //获取票的id
+                    int ticketId = order.getValueOfTicketId();
+                    tickets::returnTicket(ticketId, order.getValueOfType());
+                    Json::Value json1;
+                    json1["code"] = 200;
+                    json1["msg"] = "";
+                    Json::Value data;
+                    data["created_at"] = order.getCreatedAt()->toCustomedFormattedString("%Y-%m-%d %H:%M:%S");
+                    data["id"] = order.getValueOfId();
+                    data["status"] = order.getValueOfStatus();
+                    data["ticket_id"] = order.getValueOfTicketId();
+                    data["type"] = order.getValueOfType();
+                    data["user_id"] = order.getValueOfUserId();
+                    Json::Value userInfo1;
+                    Json::Reader reader;
+                    reader.parse(order.getValueOfUserInfo(), userInfo1);
+                    data["userInfo"] = userInfo1;
+                    json1["data"] = data;
+                    auto resp = HttpResponse::newHttpJsonResponse(json1);
+                    callback(resp);
+                    return;
+                } catch (const std::exception &e) {
+                    Json::Value json1;
+                    json1["code"] = 500;
+                    LOG_DEBUG << e.what();
+                    json1["msg"] = "服务器错误，订单取消失败";
+                    auto resp = HttpResponse::newHttpJsonResponse(json1);
+                    callback(resp);
+                    return;
+                }
+            }
+        }
+    }
+    Json::Value json1;
+    json1["code"] = 404;
+    json1["msg"] = "订单不存在";
+    auto resp = HttpResponse::newHttpJsonResponse(json1);
+    callback(resp);
 }
 

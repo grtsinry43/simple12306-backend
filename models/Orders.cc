@@ -19,6 +19,7 @@ const std::string Orders::Cols::_ticket_id = "ticket_id";
 const std::string Orders::Cols::_status = "status";
 const std::string Orders::Cols::_created_at = "created_at";
 const std::string Orders::Cols::_user_info = "user_info";
+const std::string Orders::Cols::_type = "type";
 const std::string Orders::primaryKeyName = "id";
 const bool Orders::hasPrimaryKey = true;
 const std::string Orders::tableName = "orders";
@@ -29,7 +30,8 @@ const std::vector<typename Orders::MetaData> Orders::metaData_={
 {"ticket_id","int32_t","integer",4,0,0,1},
 {"status","int32_t","integer",4,0,0,1},
 {"created_at","::trantor::Date","timestamp without time zone",0,0,0,1},
-{"user_info","std::string","json",0,0,0,1}
+{"user_info","std::string","json",0,0,0,1},
+{"type","int32_t","integer",4,0,0,0}
 };
 const std::string &Orders::getColumnName(size_t index) noexcept(false)
 {
@@ -82,11 +84,15 @@ Orders::Orders(const Row &r, const ssize_t indexOffset) noexcept
         {
             userInfo_=std::make_shared<std::string>(r["user_info"].as<std::string>());
         }
+        if(!r["type"].isNull())
+        {
+            type_=std::make_shared<int32_t>(r["type"].as<int32_t>());
+        }
     }
     else
     {
         size_t offset = (size_t)indexOffset;
-        if(offset + 6 > r.size())
+        if(offset + 7 > r.size())
         {
             LOG_FATAL << "Invalid SQL result for this model";
             return;
@@ -140,13 +146,18 @@ Orders::Orders(const Row &r, const ssize_t indexOffset) noexcept
         {
             userInfo_=std::make_shared<std::string>(r[index].as<std::string>());
         }
+        index = offset + 6;
+        if(!r[index].isNull())
+        {
+            type_=std::make_shared<int32_t>(r[index].as<int32_t>());
+        }
     }
 
 }
 
 Orders::Orders(const Json::Value &pJson, const std::vector<std::string> &pMasqueradingVector) noexcept(false)
 {
-    if(pMasqueradingVector.size() != 6)
+    if(pMasqueradingVector.size() != 7)
     {
         LOG_ERROR << "Bad masquerading vector";
         return;
@@ -215,6 +226,14 @@ Orders::Orders(const Json::Value &pJson, const std::vector<std::string> &pMasque
         if(!pJson[pMasqueradingVector[5]].isNull())
         {
             userInfo_=std::make_shared<std::string>(pJson[pMasqueradingVector[5]].asString());
+        }
+    }
+    if(!pMasqueradingVector[6].empty() && pJson.isMember(pMasqueradingVector[6]))
+    {
+        dirtyFlag_[6] = true;
+        if(!pJson[pMasqueradingVector[6]].isNull())
+        {
+            type_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[6]].asInt64());
         }
     }
 }
@@ -287,12 +306,20 @@ Orders::Orders(const Json::Value &pJson) noexcept(false)
             userInfo_=std::make_shared<std::string>(pJson["user_info"].asString());
         }
     }
+    if(pJson.isMember("type"))
+    {
+        dirtyFlag_[6]=true;
+        if(!pJson["type"].isNull())
+        {
+            type_=std::make_shared<int32_t>((int32_t)pJson["type"].asInt64());
+        }
+    }
 }
 
 void Orders::updateByMasqueradedJson(const Json::Value &pJson,
                                             const std::vector<std::string> &pMasqueradingVector) noexcept(false)
 {
-    if(pMasqueradingVector.size() != 6)
+    if(pMasqueradingVector.size() != 7)
     {
         LOG_ERROR << "Bad masquerading vector";
         return;
@@ -362,6 +389,14 @@ void Orders::updateByMasqueradedJson(const Json::Value &pJson,
             userInfo_=std::make_shared<std::string>(pJson[pMasqueradingVector[5]].asString());
         }
     }
+    if(!pMasqueradingVector[6].empty() && pJson.isMember(pMasqueradingVector[6]))
+    {
+        dirtyFlag_[6] = true;
+        if(!pJson[pMasqueradingVector[6]].isNull())
+        {
+            type_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[6]].asInt64());
+        }
+    }
 }
 
 void Orders::updateByJson(const Json::Value &pJson) noexcept(false)
@@ -429,6 +464,14 @@ void Orders::updateByJson(const Json::Value &pJson) noexcept(false)
         if(!pJson["user_info"].isNull())
         {
             userInfo_=std::make_shared<std::string>(pJson["user_info"].asString());
+        }
+    }
+    if(pJson.isMember("type"))
+    {
+        dirtyFlag_[6] = true;
+        if(!pJson["type"].isNull())
+        {
+            type_=std::make_shared<int32_t>((int32_t)pJson["type"].asInt64());
         }
     }
 }
@@ -545,6 +588,28 @@ void Orders::setUserInfo(std::string &&pUserInfo) noexcept
     dirtyFlag_[5] = true;
 }
 
+const int32_t &Orders::getValueOfType() const noexcept
+{
+    static const int32_t defaultValue = int32_t();
+    if(type_)
+        return *type_;
+    return defaultValue;
+}
+const std::shared_ptr<int32_t> &Orders::getType() const noexcept
+{
+    return type_;
+}
+void Orders::setType(const int32_t &pType) noexcept
+{
+    type_ = std::make_shared<int32_t>(pType);
+    dirtyFlag_[6] = true;
+}
+void Orders::setTypeToNull() noexcept
+{
+    type_.reset();
+    dirtyFlag_[6] = true;
+}
+
 void Orders::updateId(const uint64_t id)
 {
 }
@@ -556,7 +621,8 @@ const std::vector<std::string> &Orders::insertColumns() noexcept
         "ticket_id",
         "status",
         "created_at",
-        "user_info"
+        "user_info",
+        "type"
     };
     return inCols;
 }
@@ -618,6 +684,17 @@ void Orders::outputArgs(drogon::orm::internal::SqlBinder &binder) const
             binder << nullptr;
         }
     }
+    if(dirtyFlag_[6])
+    {
+        if(getType())
+        {
+            binder << getValueOfType();
+        }
+        else
+        {
+            binder << nullptr;
+        }
+    }
 }
 
 const std::vector<std::string> Orders::updateColumns() const
@@ -642,6 +719,10 @@ const std::vector<std::string> Orders::updateColumns() const
     if(dirtyFlag_[5])
     {
         ret.push_back(getColumnName(5));
+    }
+    if(dirtyFlag_[6])
+    {
+        ret.push_back(getColumnName(6));
     }
     return ret;
 }
@@ -703,6 +784,17 @@ void Orders::updateArgs(drogon::orm::internal::SqlBinder &binder) const
             binder << nullptr;
         }
     }
+    if(dirtyFlag_[6])
+    {
+        if(getType())
+        {
+            binder << getValueOfType();
+        }
+        else
+        {
+            binder << nullptr;
+        }
+    }
 }
 Json::Value Orders::toJson() const
 {
@@ -755,6 +847,14 @@ Json::Value Orders::toJson() const
     {
         ret["user_info"]=Json::Value();
     }
+    if(getType())
+    {
+        ret["type"]=getValueOfType();
+    }
+    else
+    {
+        ret["type"]=Json::Value();
+    }
     return ret;
 }
 
@@ -762,7 +862,7 @@ Json::Value Orders::toMasqueradedJson(
     const std::vector<std::string> &pMasqueradingVector) const
 {
     Json::Value ret;
-    if(pMasqueradingVector.size() == 6)
+    if(pMasqueradingVector.size() == 7)
     {
         if(!pMasqueradingVector[0].empty())
         {
@@ -830,6 +930,17 @@ Json::Value Orders::toMasqueradedJson(
                 ret[pMasqueradingVector[5]]=Json::Value();
             }
         }
+        if(!pMasqueradingVector[6].empty())
+        {
+            if(getType())
+            {
+                ret[pMasqueradingVector[6]]=getValueOfType();
+            }
+            else
+            {
+                ret[pMasqueradingVector[6]]=Json::Value();
+            }
+        }
         return ret;
     }
     LOG_ERROR << "Masquerade failed";
@@ -880,6 +991,14 @@ Json::Value Orders::toMasqueradedJson(
     else
     {
         ret["user_info"]=Json::Value();
+    }
+    if(getType())
+    {
+        ret["type"]=getValueOfType();
+    }
+    else
+    {
+        ret["type"]=Json::Value();
     }
     return ret;
 }
@@ -936,13 +1055,18 @@ bool Orders::validateJsonForCreation(const Json::Value &pJson, std::string &err)
         err="The user_info column cannot be null";
         return false;
     }
+    if(pJson.isMember("type"))
+    {
+        if(!validJsonOfField(6, "type", pJson["type"], err, true))
+            return false;
+    }
     return true;
 }
 bool Orders::validateMasqueradedJsonForCreation(const Json::Value &pJson,
                                                 const std::vector<std::string> &pMasqueradingVector,
                                                 std::string &err)
 {
-    if(pMasqueradingVector.size() != 6)
+    if(pMasqueradingVector.size() != 7)
     {
         err = "Bad masquerading vector";
         return false;
@@ -1016,6 +1140,14 @@ bool Orders::validateMasqueradedJsonForCreation(const Json::Value &pJson,
             return false;
         }
       }
+      if(!pMasqueradingVector[6].empty())
+      {
+          if(pJson.isMember(pMasqueradingVector[6]))
+          {
+              if(!validJsonOfField(6, pMasqueradingVector[6], pJson[pMasqueradingVector[6]], err, true))
+                  return false;
+          }
+      }
     }
     catch(const Json::LogicError &e)
     {
@@ -1061,13 +1193,18 @@ bool Orders::validateJsonForUpdate(const Json::Value &pJson, std::string &err)
         if(!validJsonOfField(5, "user_info", pJson["user_info"], err, false))
             return false;
     }
+    if(pJson.isMember("type"))
+    {
+        if(!validJsonOfField(6, "type", pJson["type"], err, false))
+            return false;
+    }
     return true;
 }
 bool Orders::validateMasqueradedJsonForUpdate(const Json::Value &pJson,
                                               const std::vector<std::string> &pMasqueradingVector,
                                               std::string &err)
 {
-    if(pMasqueradingVector.size() != 6)
+    if(pMasqueradingVector.size() != 7)
     {
         err = "Bad masquerading vector";
         return false;
@@ -1106,6 +1243,11 @@ bool Orders::validateMasqueradedJsonForUpdate(const Json::Value &pJson,
       if(!pMasqueradingVector[5].empty() && pJson.isMember(pMasqueradingVector[5]))
       {
           if(!validJsonOfField(5, pMasqueradingVector[5], pJson[pMasqueradingVector[5]], err, false))
+              return false;
+      }
+      if(!pMasqueradingVector[6].empty() && pJson.isMember(pMasqueradingVector[6]))
+      {
+          if(!validJsonOfField(6, pMasqueradingVector[6], pJson[pMasqueradingVector[6]], err, false))
               return false;
       }
     }
@@ -1196,6 +1338,17 @@ bool Orders::validJsonOfField(size_t index,
                 return false;
             }
             if(!pJson.isString())
+            {
+                err="Type error in the "+fieldName+" field";
+                return false;
+            }
+            break;
+        case 6:
+            if(pJson.isNull())
+            {
+                return true;
+            }
+            if(!pJson.isInt())
             {
                 err="Type error in the "+fieldName+" field";
                 return false;

@@ -15,9 +15,10 @@ namespace api {
             METHOD_ADD(user::login, "/login?username={1}&password={2}", Post);
             METHOD_ADD(user::reg, "/reg?username={1}&password={2}", Post);
             METHOD_ADD(user::deleteUser, "/del?username={1}&password={2}", Delete);
-            METHOD_ADD(user::updateUser, "/update?username={1}&phone={2}&email={3}&region={4}&gender={5}", Put);
-            METHOD_ADD(user::verify, "/verify?username={1}", Post);
-            METHOD_ADD(user::verifyEdu, "/edu?username={1}", Post);
+            METHOD_ADD(user::updateUser, "/update?username={1}&phone={2}&email={3}&region={4}&gender={5}", Put,
+                       "UserFilter");
+            METHOD_ADD(user::verify, "/verify?username={1}", Post, "UserFilter");
+            METHOD_ADD(user::verifyEdu, "/edu?username={1}", Post, "UserFilter");
 
         METHOD_LIST_END
 
@@ -38,10 +39,10 @@ namespace api {
                         const std::string &region, const std::string &gender) const;
 
         void verify(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback,
-                        const std::string &username) const;
+                    const std::string &username) const;
 
         void verifyEdu(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback,
-                    const std::string &username) const;
+                       const std::string &username) const;
 
     };
 }
