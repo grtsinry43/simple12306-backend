@@ -16,9 +16,9 @@ namespace api {
             METHOD_ADD(user::reg, "/reg?username={1}&password={2}", Post);
             METHOD_ADD(user::deleteUser, "/del?username={1}&password={2}", Delete);
             METHOD_ADD(user::updateUser, "/update?username={1}&phone={2}&email={3}&region={4}&gender={5}", Put,
-                       "UserFilter");
-            METHOD_ADD(user::verify, "/verify?username={1}", Post, "UserFilter");
-            METHOD_ADD(user::verifyEdu, "/edu?username={1}", Post, "UserFilter");
+                       "LoginFilter");
+            METHOD_ADD(user::verify, "/verify?username={1}", Post, "LoginFilter");
+            METHOD_ADD(user::verifyEdu, "/edu?username={1}", Post, "LoginFilter");
 
         METHOD_LIST_END
 
