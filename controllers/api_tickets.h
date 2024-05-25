@@ -20,5 +20,9 @@ namespace api {
         // void get(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback, int p1, std::string p2);
         // void your_method_name(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback, double p1, int p2) const;
         void getTickets(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) const;
+
+        static bool haveTicket(int ticketId, int typeId);
+
+        static void buyTicket(int ticketId, int typeId);
     };
 }

@@ -2,6 +2,7 @@
 #include "api_order.h"
 #include "Orders.h"
 #include "Tickets.h"
+#include "api_tickets.h"
 
 
 using namespace api;
@@ -15,11 +16,19 @@ void order::newOrder(const HttpRequestPtr &req, std::function<void(const HttpRes
     auto json = req->getJsonObject();
     int userId = (*json)["userId"].asInt();
     int ticketId = (*json)["ticketId"].asInt();
+    int type = (*json)["type"].asInt();
     auto userInfo = (*json)["userInfo"];
     std::string name = userInfo["name"].asString();
     std::string phone = userInfo["phone"].asString();
     std::string idCard = userInfo["idCard"].asString();
-    std::string type = userInfo["type"].asString();
+    if (!tickets::haveTicket(ticketId, type)) {
+        Json::Value json1;
+        json1["code"] = 405;
+        json1["msg"] = "票已售完";
+        auto resp = HttpResponse::newHttpJsonResponse(json1);
+        callback(resp);
+        return;
+    }
     drogon::orm::DbClientPtr client = drogon::app().getDbClient();
     drogon::orm::Mapper<drogon_model::simple12306::Orders> mapper(client);
     drogon_model::simple12306::Orders order;
@@ -35,24 +44,30 @@ void order::newOrder(const HttpRequestPtr &req, std::function<void(const HttpRes
     order.setStatus(0);
     try {
         mapper.insert(order);
+        tickets::buyTicket(ticketId, type);
         Json::Value json1;
         json1["code"] = 200;
         json1["msg"] = "";
-        json1["data"] = order.toJson();
+        Json::Value data;
+        data["created_at"] = order.getCreatedAt()->toCustomedFormattedString("%Y-%m-%d %H:%M:%S");
+        data["id"] = order.getValueOfId();
+        data["status"] = order.getValueOfStatus();
+        data["ticket_id"] = order.getValueOfTicketId();
+        data["user_id"] = order.getValueOfUserId();
+        Json::Value userInfo1;
+        Json::Reader reader;
+        reader.parse(order.getValueOfUserInfo(), userInfo1);
+        data["userInfo"] = userInfo1;
+        json1["data"] = data;
         auto resp = HttpResponse::newHttpJsonResponse(json1);
         callback(resp);
     } catch (const std::exception &e) {
         Json::Value json1;
         json1["code"] = 500;
-        json1["msg"] = e.what();
+        LOG_DEBUG << e.what();
+        json1["msg"] = "服务器错误，订单创建失败";
         auto resp = HttpResponse::newHttpJsonResponse(json1);
         callback(resp);
     }
 }
 
-bool order::haveTicket(int ticketId,int typeId) {
-    drogon::orm::DbClientPtr client = drogon::app().getDbClient();
-    drogon::orm::Mapper<drogon_model::simple12306::Tickets> mapper(client);
-    auto ticket = mapper.findByPrimaryKey(ticketId);
-
-}
