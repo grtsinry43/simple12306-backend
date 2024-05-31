@@ -75,14 +75,15 @@ void user::login(const HttpRequestPtr &req, std::function<void(const HttpRespons
 
                 //返回用户数据，包括用户名，用户id，是否验证，是否学生
                 Json::Value data;
-                data["username"] = *(userFind.at(0).getUsername());
-                data["userId"] = *(userFind.at(0).getUserId());
-                data["isVerified"] = *(userFind.at(0).getIsVerified());
-                data["isStudent"] = *(userFind.at(0).getIsStudent());
+                data["username"] = *(user.getUsername());
+                data["userId"] = *(user.getUserId());
+                data["isVerified"] = *(user.getIsVerified());
+                data["isStudent"] = *(user.getIsStudent());
                 json["data"] = data;
                 auto resp = HttpResponse::newHttpJsonResponse(json);
 
                 // 设置token到header
+                resp->addHeader("Access-Control-Allow-Origin", "*");
                 resp->addHeader("Authorization", token);
                 callback(resp);
                 return;
@@ -347,4 +348,39 @@ void user::verifyEdu(const HttpRequestPtr &req, std::function<void(const HttpRes
     json["msg"] = "用户不存在";
     auto resp = HttpResponse::newHttpJsonResponse(json);
     callback(resp);
+}
+
+/**
+ * 获取用户信息
+ * @param req
+ * @param callback
+ * @param username
+ */
+void user::getInfo(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback,
+                   const std::string &username) {
+    drogon::orm::DbClientPtr client = drogon::app().getDbClient();
+    drogon::orm::Mapper<drogon_model::simple12306::Users> mapper(client);
+    std::vector<drogon_model::simple12306::Users> userFind = mapper.orderBy(
+            drogon_model::simple12306::Users::Cols::_username).findAll();
+    for (drogon_model::simple12306::Users user: userFind) {
+        if (*(user.getUsername()) == username) {
+            LOG_DEBUG << "find user: " << *(user.getUsername());
+            Json::Value json;
+            json["code"] = 200;
+            json["msg"] = "";
+            // 返回用户数据，包括用户名，用户id，是否验证，是否学生，电话，邮箱，地区，性别
+            Json::Value data;
+            data["username"] = *(user.getUsername());
+            data["userId"] = *(user.getUserId());
+            data["isVerified"] = *(user.getIsVerified());
+            data["isStudent"] = *(user.getIsStudent());
+            if (user.getPhone() != nullptr) data["phone"] = *(user.getPhone());
+            if (user.getEmail() != nullptr) data["email"] = *(user.getEmail());
+            if (user.getRegion() != nullptr) data["region"] = *(user.getRegion());
+            if (user.getGender() != nullptr) data["gender"] = *(user.getGender());
+            json["data"] = data;
+            auto resp = HttpResponse::newHttpJsonResponse(json);
+            callback(resp);
+        }
+    }
 }

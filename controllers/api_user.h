@@ -15,6 +15,7 @@ namespace api {
             METHOD_ADD(user::login, "/login?username={1}&password={2}", Post);
             METHOD_ADD(user::reg, "/reg?username={1}&password={2}", Post);
             METHOD_ADD(user::deleteUser, "/del?username={1}&password={2}", Delete);
+            METHOD_ADD(user::getInfo, "/info?username={1}", Get, "LoginFilter");
             METHOD_ADD(user::updateUser, "/update?username={1}&phone={2}&email={3}&region={4}&gender={5}", Put,
                        "LoginFilter");
             METHOD_ADD(user::verify, "/verify?username={1}", Post, "LoginFilter");
@@ -27,6 +28,10 @@ namespace api {
         // void your_method_name(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback, double p1, int p2) const;
         void login(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback,
                    const std::string &username, const std::string &password) const;
+
+        //获取用户信息
+        void getInfo(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback,
+                     const std::string &username);
 
         void reg(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback,
                  const std::string &username, const std::string &password) const;

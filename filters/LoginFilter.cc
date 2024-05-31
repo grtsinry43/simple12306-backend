@@ -12,7 +12,7 @@ void LoginFilter::doFilter(const HttpRequestPtr &req,
                            FilterCallback &&fcb,
                            FilterChainCallback &&fccb) {
     //从req的请求头中获取用户的token
-    auto token = req->getHeader("token");
+    auto token = req->getHeader("authorization");
     LOG_DEBUG << "token:" << token;
     if (token.empty()) {
         //如果token为空，返回401错误
