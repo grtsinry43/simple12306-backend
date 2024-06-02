@@ -191,10 +191,10 @@ void order::cancelOrder(const HttpRequestPtr &req, std::function<void(const Http
 
 
 /**
- * 获取对应用户的订单列表，用用户名区分
+ * 获取对应用户的订单列表，用用户id查询
  */
 void order::getOrders(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback,
-                      const std::string &userName) const {
+                      const std::string &userId) const {
     drogon::orm::DbClientPtr client = drogon::app().getDbClient();
     drogon::orm::Mapper<drogon_model::simple12306::Orders> mapper(client);
     std::vector<drogon_model::simple12306::Orders> ordersFind = mapper.orderBy(
@@ -207,7 +207,7 @@ void order::getOrders(const HttpRequestPtr &req, std::function<void(const HttpRe
         Json::Value userInfo1;
         Json::Reader reader;
         reader.parse(order.getValueOfUserInfo(), userInfo1);
-        if (userInfo1["name"].asString() == userName) {
+        if (order.getValueOfUserId() == std::stoi(userId)) {
             Json::Value item;
             item["created_at"] = order.getCreatedAt()->toCustomedFormattedString("%Y-%m-%d %H:%M:%S");
             item["id"] = order.getValueOfId();
@@ -219,5 +219,8 @@ void order::getOrders(const HttpRequestPtr &req, std::function<void(const HttpRe
             data.append(item);
         }
     }
+    json1["data"] = data;
+    auto resp = HttpResponse::newHttpJsonResponse(json1);
+    callback(resp);
 }
 
