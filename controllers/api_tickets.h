@@ -13,6 +13,7 @@ namespace api {
             // METHOD_ADD(tickets::your_method_name, "/{1}/{2}/list", Get); // path is /api/tickets/{arg1}/{arg2}/list
             // ADD_METHOD_TO(tickets::your_method_name, "/absolute/path/{1}/{2}/list", Get); // path is /absolute/path/{arg1}/{arg2}/list
             METHOD_ADD(tickets::getTickets, "/list", Get);
+            METHOD_ADD(tickets::searchTickets, "/search?from={1}&to={2}&date={3}", Get);
 
         METHOD_LIST_END
 
@@ -26,5 +27,8 @@ namespace api {
         static void buyTicket(int ticketId, int typeId);
 
         static void returnTicket(int ticketId, int typeId);
+
+        void searchTickets(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback,
+                           const std::string &from, const std::string &to, const std::string &date);
     };
 }
