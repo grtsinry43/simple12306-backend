@@ -29,6 +29,7 @@ void tickets::getTickets(const HttpRequestPtr &req, std::function<void(const Htt
         item["from"] = *(ticket.getFrom());
         item["to"] = *(ticket.getTo());
         item["price"] = *(ticket.getPrice());
+        item["id"] = *(ticket.getId());
         //时间戳要转换成字符串
         item["start_date"] = formatDate(*(ticket.getStartDate()));
         item["end_date"] = formatDate(*(ticket.getEndDate()));
