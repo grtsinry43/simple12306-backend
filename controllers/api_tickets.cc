@@ -146,14 +146,19 @@ void tickets::searchTickets(const HttpRequestPtr &req, std::function<void(const 
     drogon::orm::Mapper<drogon_model::simple12306::Tickets> mapper(client);
     std::vector<drogon_model::simple12306::Tickets> ticketsFind = mapper.orderBy(
             drogon_model::simple12306::Tickets::Cols::_title).findAll();
+
+    LOG_DEBUG << "请求: " << from << " " << to << " " << date;
     //筛选
     std::vector<drogon_model::simple12306::Tickets> tickets;
     for (auto &ticket: ticketsFind) {
-        if (*(ticket.getFrom()) == from && *(ticket.getTo()) == to) {
+
+        //时间戳要转换成字符串，如果请求时间为空，就不筛选时间
+        //这里时间的前10位对上就可以
+
+        if (*(ticket.getFrom()) == from && *(ticket.getTo()) == to &&
+            formatDate(*(ticket.getStartDate())).substr(0, 10) == date.substr(0, 10)) {
             tickets.push_back(ticket);
-        }
-        //时间戳要转换成字符串
-        if (formatDate(*(ticket.getStartDate())) == date) {
+        } else if (*(ticket.getFrom()) == from && *(ticket.getTo()) == to && date.empty()) {
             tickets.push_back(ticket);
         }
     }
@@ -171,6 +176,7 @@ void tickets::searchTickets(const HttpRequestPtr &req, std::function<void(const 
         item["from"] = *(ticket.getFrom());
         item["to"] = *(ticket.getTo());
         item["price"] = *(ticket.getPrice());
+        item["id"] = *(ticket.getId());
         //时间戳要转换成字符串
         item["start_date"] = formatDate(*(ticket.getStartDate()));
         item["end_date"] = formatDate(*(ticket.getEndDate()));

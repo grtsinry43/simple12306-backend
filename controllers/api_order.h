@@ -15,6 +15,7 @@ namespace api {
             METHOD_ADD(order::newOrder, "/new", Post, "LoginFilter");
             METHOD_ADD(order::payOrder, "/pay?orderId={1}", Post, "LoginFilter");
             METHOD_ADD(order::cancelOrder, "/cancel?orderId={1}", Post, "LoginFilter");
+            METHOD_ADD(order::getOrders, "/list?username={1}", Get, "LoginFilter");
 
         METHOD_LIST_END
 
@@ -28,5 +29,8 @@ namespace api {
 
         void cancelOrder(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback,
                          const std::string &orderId) const;
+
+        void getOrders(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback,
+                       const std::string &userId) const;
     };
 }
