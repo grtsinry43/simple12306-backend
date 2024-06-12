@@ -1,10 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(simple12306-backend CXX)
 
-
-# 查找 yaml-cpp 库
-find_package(yaml-cpp REQUIRED)
-
 include(CheckIncludeFileCXX)
 
 check_include_file_cxx(any HAS_ANY)
@@ -37,6 +33,7 @@ add_executable(${PROJECT_NAME} main.cc
 # target_link_libraries(${PROJECT_NAME} PRIVATE drogon)
 #
 # and comment out the following lines
+find_package(yaml-cpp CONFIG REQUIRED)
 find_package(Drogon CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE Drogon::Drogon yaml-cpp::yaml-cpp)
 

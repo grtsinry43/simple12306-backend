@@ -4,7 +4,7 @@ int main() {
     //Set HTTP listener address and port
     drogon::app().addListener("0.0.0.0", 5555);
     //Load config file
-    drogon::app().loadConfigFile("../config.yaml");
+    drogon::app().loadConfigFile("../config.json");
 
     // Add a new preprocessor
     drogon::app().registerPreHandlingAdvice([](const drogon::HttpRequestPtr &req,
