@@ -12,7 +12,7 @@ namespace api {
             // METHOD_ADD(order::get, "/{2}/{1}", Get); // path is /api/order/{arg2}/{arg1}
             // METHOD_ADD(order::your_method_name, "/{1}/{2}/list", Get); // path is /api/order/{arg1}/{arg2}/list
             // ADD_METHOD_TO(order::your_method_name, "/absolute/path/{1}/{2}/list", Get); // path is /absolute/path/{arg1}/{arg2}/list
-            METHOD_ADD(order::newOrder, "/new", Post, "LoginFilter");
+            METHOD_ADD(order::newOrder, "/new", Post, "LoginFilter", "VerifyFilter");
             METHOD_ADD(order::payOrder, "/pay?orderId={1}", Post, "LoginFilter");
             METHOD_ADD(order::cancelOrder, "/cancel?orderId={1}", Post, "LoginFilter");
             METHOD_ADD(order::getOrders, "/list?userId={1}", Get, "LoginFilter");

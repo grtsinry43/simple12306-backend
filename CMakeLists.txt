@@ -24,6 +24,8 @@ add_executable(${PROJECT_NAME} main.cc
         controllers/api_tickets.cc
         controllers/api_order.cc
         filters/LoginFilter.cc
+        filters/VerifyFilter.cc
+        filters/VerifyFilter.h
 )
 
 # ##############################################################################
