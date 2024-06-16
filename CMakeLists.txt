@@ -76,7 +76,3 @@ target_sources(${PROJECT_NAME}
 # ##############################################################################
 # uncomment the following line for dynamically loading views 
 # set_property(TARGET ${PROJECT_NAME} PROPERTY ENABLE_EXPORTS ON)
-
-# ##############################################################################
-
-add_subdirectory(test)
