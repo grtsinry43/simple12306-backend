@@ -30,7 +30,8 @@ void VerifyFilter::doFilter(const HttpRequestPtr &req,
     for (const drogon_model::simple12306::Users& user: userFind) {
         if (user.getValueOfUserId() == userId){
             LOG_DEBUG << "find user: " << *(user.getUsername());
-            if (user.getIsVerified()) {
+            LOG_DEBUG << "isVerified: " << (*user.getIsVerified() ? "true" : "false");
+            if (*user.getIsVerified()) {
                 fccb();
                 return;
             }
