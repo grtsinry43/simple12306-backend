@@ -150,7 +150,7 @@ void tickets::searchTickets(const HttpRequestPtr &req, std::function<void(const 
     std::vector<drogon_model::simple12306::Tickets> ticketsFind = mapper.orderBy(
             drogon_model::simple12306::Tickets::Cols::_title).findAll();
 
-    LOG_DEBUG << "请求: " << from << " " << to << " " << date;
+    LOG_DEBUG << "请求: " << from << " " << to << " " << date << " " << startPrice << " " << endPrice;
     //筛选
     std::vector<drogon_model::simple12306::Tickets> tickets;
     for (auto &ticket: ticketsFind) {

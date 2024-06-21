@@ -383,4 +383,9 @@ void user::getInfo(const HttpRequestPtr &req, std::function<void(const HttpRespo
             callback(resp);
         }
     }
+    Json::Value json;
+    json["code"] = 404;
+    json["msg"] = "用户不存在";
+    auto resp = HttpResponse::newHttpJsonResponse(json);
+    callback(resp);
 }
