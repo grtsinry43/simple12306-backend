@@ -70,6 +70,7 @@ bool tickets::haveTicket(int ticketId, int typeId) {
             }
         }
     }
+    return false;
 }
 
 void tickets::buyTicket(int ticketId, int typeId) {
@@ -142,7 +143,8 @@ void tickets::returnTicket(int ticketId, int typeId) {
 * 搜索车票，from,to,date
 */
 void tickets::searchTickets(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback,
-                            const std::string &from, const std::string &to, const std::string &date) {
+                            const std::string &from, const std::string &to,
+                            const std::string &startPrice, const std::string &endPrice, const std::string &date) {
     drogon::orm::DbClientPtr client = drogon::app().getDbClient();
     drogon::orm::Mapper<drogon_model::simple12306::Tickets> mapper(client);
     std::vector<drogon_model::simple12306::Tickets> ticketsFind = mapper.orderBy(
@@ -157,9 +159,20 @@ void tickets::searchTickets(const HttpRequestPtr &req, std::function<void(const 
         //这里时间的前10位对上就可以
 
         if (*(ticket.getFrom()) == from && *(ticket.getTo()) == to &&
-            formatDate(*(ticket.getStartDate())).substr(0, 10) == date.substr(0, 10)) {
+            formatDate(*(ticket.getStartDate())).substr(0, 10) == date.substr(0, 10) &&
+            std::stod(ticket.getValueOfPrice()) > std::stoi(startPrice) &&
+            std::stod(ticket.getValueOfPrice()) < std::stoi(endPrice)) {
             tickets.push_back(ticket);
-        } else if (*(ticket.getFrom()) == from && *(ticket.getTo()) == to && date.empty()) {
+        } else if (*(ticket.getFrom()) == from && *(ticket.getTo()) == to &&
+                   formatDate(*(ticket.getStartDate())).substr(0, 10) == date.substr(0, 10) && startPrice.empty() &&
+                   endPrice.empty()) {
+            tickets.push_back(ticket);
+        } else if (*(ticket.getFrom()) == from && *(ticket.getTo()) == to && date.empty() && startPrice.empty() &&
+                   endPrice.empty()) {
+            tickets.push_back(ticket);
+        } else if (*(ticket.getFrom()) == from && *(ticket.getTo()) == to && date.empty() &&
+                   std::stod(ticket.getValueOfPrice()) > std::stoi(startPrice) &&
+                   std::stod(ticket.getValueOfPrice()) < std::stoi(endPrice)) {
             tickets.push_back(ticket);
         }
     }
